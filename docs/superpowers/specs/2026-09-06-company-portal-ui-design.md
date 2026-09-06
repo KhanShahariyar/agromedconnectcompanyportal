@@ -81,6 +81,7 @@ Five gaps. All additive; none touches a farmer table, column or predicate.
 | G3 | No delivery-man role and no handover permission | Seed a `delivery_man` seller-scope role (rank 200) and an `order.handover` permission |
 | G4 | No coordinates anywhere. `ref.geography` is a code hierarchy (country→division→district→upazila) with **no lat/lng**; `sales.order.delivery_address` is free text | Nullable `delivery_lat` / `delivery_lng` on `sales.order`, captured at checkout by the Flutter app (see §9, Risk R1) |
 | G5 | No bundle concept behind the Solution Center screen | Deferred — flagged in §9, Open Question O1 |
+| G6 | **No per-company delivery mode.** `sales.order.delivery_type` is per-order; there is no column recording which mode the platform has assigned a company, and no permission guarding who may change it | Nullable `delivery_mode` on `iam.organisation`, values `own \| partner \| both`, default `partner`. Writable only under a new `platform.delivery_mode` permission held by `super_admin` / `platform_ops`. The company's token carries it read-only. |
 
 ---
 
@@ -96,6 +97,8 @@ Five gaps. All additive; none touches a farmer table, column or predicate.
 | D6 | **Foundation-first rebuild** | Four of the requirements are cross-cutting (auth/RBAC, i18n, data layer, second shell). Retrofitting them across 20 existing pages costs more than rebuilding on top of them. |
 | D7 | **Leaflet + OpenStreetMap, not Google Maps** | No API key, no billing account. Google Cloud billing on this account is inactive. |
 | D8 | **Charts get one encoding per screen** | Explicit brief requirement. `Analytics.jsx` currently violates it — an AreaChart and a LineChart both plotting value-over-time on one page. §7 assigns each screen a distinct-encoding chart set. |
+| D9 | **The official logo appears throughout**, from one `<Logo/>` component | The mark already ships in the Flutter farmer app (`assets/images/logo.png`). Reusing it makes portal and app read as one product. Placement and constraints in §6.5. |
+| D10 | **The delivery model is set by the platform super admin, not the company** | The company does not choose whether it self-delivers or uses platform delivery — the platform assigns it. The company's Settings screen therefore *displays* the assigned mode read-only, and the Orders screen offers only the fulfilment path that mode permits. |
 
 ---
 
@@ -265,6 +268,37 @@ and would fall back to whatever the OS supplies, differently on every machine.
 
 ---
 
+### 6.5 The logo
+
+**Source:** `agromedconnect/assets/images/logo.png` — 1563×1563 PNG, transparent, a green
+caduceus-and-wheat emblem inside a ring. Copied to `src/assets/brand/logo-master.png` and
+downscaled to 512 / 192 / 96 / 64 / 48 / 32 px, plus `public/favicon.png`.
+
+**One component.** Everything renders `<Logo size=… variant=… />`. No screen embeds an `<img>`
+against a brand path directly, so a future SVG replacement is a one-file change.
+
+Placement:
+
+| Where | Size | Variant |
+|---|---|---|
+| `AuthShell` — above the sign-in card | 96 px | full mark |
+| `CompanyShell` sidebar header, beside the wordmark | 32 px | full mark |
+| `DeliveryShell` top bar | 32 px | full mark |
+| Browser tab / PWA icon | 32 / 192 / 512 px | favicon set |
+| Empty states, print/export headers, PDF report header | 48 px | full mark |
+| Loading splash | 96 px | full mark, gentle pulse |
+
+**Two constraints found by inspecting the asset:**
+
+1. **The logo's green is not `--primary`.** The mark is a mid-green gradient (roughly
+   `#2E7D32`–`#3E8E3E`); the palette's primary is `#004B23`, which is considerably darker.
+   The logo is a **brand asset and is not recoloured** to match. It is placed on `--panel` or
+   `--base`, never on a `--primary` fill, where the two greens would sit against each other
+   and read as a mistake. Where a mark is needed on a dark green surface, use the wordmark in
+   `--panel` instead.
+2. **32 px is the floor.** Verified by rendering: at 32 px the ring and central stalk read but
+   the caduceus detail is gone. Below 32 px the mark turns to mush — use the wordmark alone.
+
 ## 7. Chart plan — one encoding per screen
 
 The rule is *no duplicate encodings on a screen*, and every chart must answer a decision.
@@ -320,7 +354,9 @@ Discounts), the Business Insights dashboard widget, and the dashboard/topbar sea
 19. **Company Profile**
 20. **Verification** — checklist, uploads, status timeline, "Verification in progress" state
 21. **Team** — members, role assignment, per-member permission overrides
-22. **Settings** — including the **delivery model** choice (own vs partner)
+22. **Settings** — notification preferences, warehouse defaults, locale. The **delivery
+    mode assigned by the platform** is shown here **read-only** (D10), with the assigning
+    date and a "contact support to change" link — never an editable control
 23. **Help Center** / 24. **Contact Support**
 
 ### Delivery — `DeliveryShell` (Delivery Man)
@@ -335,6 +371,12 @@ Discounts), the Business Insights dashboard widget, and the dashboard/topbar sea
 
 Both are rendered as an explicit stepper with a timestamp and actor per step, sourced from
 `sales.order_status_history` + `sales.shipment`.
+
+**Which machine an order uses is not the company's choice** (D10). It follows the
+platform-assigned `organisation.delivery_mode`: `own` shows only the own-delivery path,
+`partner` only the platform path, and `both` lets the company pick per order at dispatch.
+When the mode permits only one path, the other path's actions are **absent, not disabled** —
+a control the company can never earn is noise, not information.
 
 **Own delivery** (`delivery_type='own'`)
 `confirmed → processing → shipped (dispatched) → assigned to delivery man → delivered
@@ -399,3 +441,6 @@ the company-side portal only needs to *show* status.
 5. Logging in as each of the three roles produces the correct shell and nav.
 6. Contrast audit passes AA for all text, with the §6.2 rules enforced.
 7. `data/contracts/` is complete enough to serve as the Phase 2 API contract.
+8. The official logo renders at every placement in §6.5 through the single `<Logo/>`
+   component, and never below 32 px.
+9. No screen offers the company a control to change its own delivery mode.
