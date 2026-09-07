@@ -305,4 +305,5 @@ export const enUS = {
   'assign.picked_up': 'Picked up',
   'assign.delivered': 'Delivered',
   'assign.failed': 'Failed',
+  'product.fixBlocker': 'Resolve this',
 } as const

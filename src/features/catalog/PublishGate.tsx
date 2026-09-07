@@ -28,7 +28,7 @@ export function PublishGate({ readiness }: { readiness: PublishReadiness }) {
               {FIX_ROUTE[b] && (
                 <>
                   {' '}
-                  <Link to={FIX_ROUTE[b]!} className="text-primary underline">{t('common.viewAll')}</Link>
+                  <Link to={FIX_ROUTE[b]!} className="text-primary underline">{t('product.fixBlocker')}</Link>
                 </>
               )}
             </span>

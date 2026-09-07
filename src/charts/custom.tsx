@@ -171,11 +171,14 @@ export function Dumbbell({ rows, absentLabel }: {
 /* ------------------------------------------------------------ Waterfall */
 
 /** List price → discount → commission → net. Makes a margin-erasing discount visible before saving. */
-export function Waterfall({ steps, caption }: {
+export function Waterfall({ steps, caption, format }: {
   steps: { label: string; delta: number; isTotal?: boolean }[]
   caption: string
+  /** Minor units in, display string out. A bare number here reads as a count. */
+  format?: (minor: number) => string
 }) {
   const f = useFormat()
+  const fmt = format ?? ((minor: number) => f.number(minor / 100))
   let running = 0
   const bars = steps.map((s) => {
     const from = s.isTotal ? 0 : running
@@ -196,7 +199,7 @@ export function Waterfall({ steps, caption }: {
             <li key={b.label}>
               <div className="mb-1 flex items-baseline justify-between text-xs">
                 <span className="text-ink">{b.label}</span>
-                <span className="text-ink-soft">{f.number(b.delta / 100)}</span>
+                <span className="text-ink-soft">{fmt(b.delta)}</span>
               </div>
               <div className="relative h-6 rounded-sm bg-sunken/50">
                 <span
@@ -208,7 +211,7 @@ export function Waterfall({ steps, caption }: {
           )
         })}
       </ul>
-      <ChartTable caption={caption} columns={['Step', 'Amount']} rows={steps.map((s) => [s.label, f.number(s.delta / 100)])} />
+      <ChartTable caption={caption} columns={['Step', 'Amount']} rows={steps.map((s) => [s.label, fmt(s.delta)])} />
     </>
   )
 }

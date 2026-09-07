@@ -32,9 +32,22 @@ export function Discounts() {
     const categories: Record<string, string[]> = {}
     for (const l of ls) (categories[l.categoryId] ??= []).push(l.id)
 
-    const all = ds.flatMap((d) => detectConflicts(d, ds, categories))
-    const conflicted = new Set(all.flatMap((c) => c.discountIds))
     const nameOf = (id: string) => ls.find((l) => l.id === id)?.name ?? id
+
+    // Running the detector for every discount reports each clash twice, once
+    // from each side. Key on the listing plus the unordered pair so a clash is
+    // stated once, and name the product rather than showing its id.
+    const seen = new Set<string>()
+    const all = ds
+      .flatMap((d) => detectConflicts(d, ds, categories))
+      .map((c) => ({ ...c, listingName: nameOf(c.listingId) }))
+      .filter((c) => {
+        const key = `${c.listingId}|${[...c.discountIds].sort().join('|')}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+    const conflicted = new Set(all.flatMap((c) => c.discountIds))
 
     const listingIds = (d: Discount) =>
       d.scope.kind === 'listing' ? d.scope.listingIds : (categories[d.scope.categoryId] ?? [])
@@ -94,10 +107,11 @@ export function Discounts() {
               {(m) => (
                 <Waterfall
                   caption={t('discounts.margin')}
+                  format={(minor) => f.money({ amountMinor: minor, currency: 'BDT', display: '' })}
                   steps={[
                     { label: t('waterfall.list'), delta: m.listPrice.amountMinor, isTotal: true },
-                    { label: t('waterfall.discount'), delta: -m.discount.amountMinor },
-                    { label: t('waterfall.commission'), delta: -m.commission.amountMinor },
+                    { label: t('waterfall.discount'), delta: -m.discount.amountMinor || 0 },
+                    { label: t('waterfall.commission'), delta: -m.commission.amountMinor || 0 },
                     { label: t('waterfall.net'), delta: m.net.amountMinor, isTotal: true },
                   ]}
                 />

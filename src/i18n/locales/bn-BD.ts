@@ -301,4 +301,5 @@ export const bnBD = {
   'assign.picked_up': 'সংগ্রহ করা হয়েছে',
   'assign.delivered': 'সরবরাহকৃত',
   'assign.failed': 'ব্যর্থ',
+  'product.fixBlocker': 'সমাধান করুন',
 } as const
