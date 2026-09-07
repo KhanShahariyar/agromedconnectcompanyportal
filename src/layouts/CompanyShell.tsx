@@ -15,7 +15,13 @@ function NavGroup({ items, heading }: { items: NavItem[]; heading?: string }) {
   const can = useCan()
   // A nav link to a page the role cannot use is a dead end, so it is removed
   // rather than disabled — the one place the gate hides instead of disabling.
-  const visible = items.filter((i) => !i.action || can(i.action).allowed || can(i.action).reason === 'verification')
+  const visible = items.filter((i) => {
+    if (!i.action) return true
+    const decision = can(i.action)
+    // A link blocked only by verification stays: the company can still prepare
+    // that work while review is pending. A role block removes it entirely.
+    return decision.allowed || decision.reason === 'verification'
+  })
 
   if (visible.length === 0) return null
   return (
