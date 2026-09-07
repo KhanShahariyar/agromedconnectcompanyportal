@@ -1,5 +1,5 @@
 import { ORDER_STATUS_FLOW } from '@/data/contracts'
-import type { DeliveryMode, DeliveryType, FulfilmentStep, OrderDetail } from '@/data/contracts'
+import type { DeliveryType, FulfilmentStep, OrderDetail } from '@/data/contracts'
 
 /**
  * Which of the two machines an order runs on.
@@ -17,11 +17,12 @@ export function stepsFor(deliveryType: DeliveryType): readonly FulfilmentStep[] 
 }
 
 /**
- * True when the company may choose the path for this specific order — only
- * when the platform assigned `both`, and only before dispatch.
+ * The company never chooses a delivery path. The platform's super admin assigns
+ * the account's delivery model, and each order simply follows it — so there is
+ * no per-order choice to offer, at any status.
  */
-export function mayChoosePath(mode: DeliveryMode, order: OrderDetail): boolean {
-  return mode === 'both' && (order.currentStep === 'confirmed' || order.currentStep === null)
+export function mayChoosePath(): false {
+  return false
 }
 
 /**

@@ -36,19 +36,21 @@ interface Seedling {
 }
 
 const CATALOGUE: Seedling[] = [
-  { id: 'lst-01', slug: 'urea-46-badc', name: 'Urea 46% (BADC)', brand: 'BADC', category: 'Fertiliser', priceMinor: 128000, kind: 'product', pack: [50, 'kg'], weight: 50000 },
-  { id: 'lst-02', slug: 'tsp-46-fert', name: 'TSP 46% Fertiliser', brand: 'BADC', category: 'Fertiliser', priceMinor: 165000, kind: 'product', pack: [50, 'kg'], weight: 50000 },
-  { id: 'lst-03', slug: 'sonar-20sl', name: 'Sonar 20SL Insecticide', brand: 'AgroShield', category: 'Pesticide', priceMinor: 74500, kind: 'product', restricted: true, pack: [1, 'l'], weight: 1100 },
-  { id: 'lst-04', slug: 'bioguard-50ec', name: 'BioGuard 50EC', brand: 'AgroShield', category: 'Pesticide', priceMinor: 89000, kind: 'product', restricted: true, pack: [1, 'l'], weight: 1100 },
-  { id: 'lst-05', slug: 'fungistop-70wp', name: 'FungiStop 70WP', brand: 'CropCare', category: 'Fungicide', priceMinor: 56000, kind: 'product', restricted: true, pack: [500, 'g'], weight: 520 },
-  { id: 'lst-06', slug: 'weedclear-80wg', name: 'WeedClear 80WG', brand: 'CropCare', category: 'Herbicide', priceMinor: 61500, kind: 'product', restricted: true, pack: [200, 'g'], weight: 220 },
-  { id: 'lst-07', slug: 'brri-dhan89-seed', name: 'BRRI Dhan89 Seed', brand: 'BRRI', category: 'Seed', priceMinor: 42000, kind: 'product', pack: [10, 'kg'], weight: 10000 },
-  { id: 'lst-08', slug: 'bari-tomato-14', name: 'BARI Tomato 14 Seed', brand: 'BARI', category: 'Seed', priceMinor: 31000, kind: 'product', pack: [100, 'g'], weight: 110 },
-  { id: 'lst-09', slug: 'hybrid-maize-nk40', name: 'Hybrid Maize NK40', brand: 'NK Seeds', category: 'Seed', priceMinor: 95000, kind: 'product', pack: [5, 'kg'], weight: 5000 },
-  { id: 'lst-10', slug: 'shobuj-vermicompost', name: 'Shobuj Vermicompost', brand: 'Shobuj', category: 'Fertiliser', priceMinor: 38000, kind: 'product', pack: [25, 'kg'], weight: 25000 },
-  { id: 'lst-11', slug: 'knapsack-sprayer-16l', name: 'Knapsack Sprayer 16L', brand: 'FieldPro', category: 'Equipment', priceMinor: 285000, kind: 'product', pack: [1, 'pc'], weight: 4200 },
-  { id: 'lst-12', slug: 'drip-irrigation-kit', name: 'Drip Irrigation Kit', brand: 'FieldPro', category: 'Equipment', priceMinor: 640000, kind: 'product', pack: [1, 'pc'], weight: 12000 },
-  { id: 'lst-13', slug: 'vetcare-oxytet-20', name: 'VetCare Oxytet 20', brand: 'VetCare', category: 'Veterinary', priceMinor: 118000, kind: 'product', restricted: true, pack: [100, 'ml'], weight: 130 },
+  // The marketplace sells agricultural medicines and services, so "category" is
+  // the medicine type. Slicing charts by category would otherwise be a constant.
+  { id: 'lst-01', slug: 'sonar-20sl', name: 'Sonar 20SL Insecticide', brand: 'AgroShield', category: 'Insecticide', priceMinor: 74500, kind: 'product', restricted: true, pack: [1, 'l'], weight: 1100 },
+  { id: 'lst-02', slug: 'cypermex-10ec', name: 'Cypermex 10EC', brand: 'AgroShield', category: 'Insecticide', priceMinor: 62000, kind: 'product', restricted: true, pack: [500, 'ml'], weight: 560 },
+  { id: 'lst-03', slug: 'aphidex-25wp', name: 'Aphidex 25WP', brand: 'CropCare', category: 'Insecticide', priceMinor: 48000, kind: 'product', restricted: true, pack: [250, 'g'], weight: 270 },
+  { id: 'lst-04', slug: 'fungistop-70wp', name: 'FungiStop 70WP', brand: 'CropCare', category: 'Fungicide', priceMinor: 56000, kind: 'product', restricted: true, pack: [500, 'g'], weight: 520 },
+  { id: 'lst-05', slug: 'blight-guard-72wp', name: 'Blight Guard 72WP', brand: 'CropCare', category: 'Fungicide', priceMinor: 69500, kind: 'product', restricted: true, pack: [1, 'kg'], weight: 1050 },
+  { id: 'lst-06', slug: 'thiovit-80wg', name: 'Thiovit 80WG', brand: 'AgroShield', category: 'Fungicide', priceMinor: 41000, kind: 'product', restricted: true, pack: [1, 'kg'], weight: 1040 },
+  { id: 'lst-07', slug: 'weedclear-80wg', name: 'WeedClear 80WG', brand: 'CropCare', category: 'Herbicide', priceMinor: 61500, kind: 'product', restricted: true, pack: [200, 'g'], weight: 220 },
+  { id: 'lst-08', slug: 'grassout-75wg', name: 'GrassOut 75WG', brand: 'AgroShield', category: 'Herbicide', priceMinor: 53000, kind: 'product', restricted: true, pack: [200, 'g'], weight: 220 },
+  { id: 'lst-09', slug: 'bioguard-50ec', name: 'BioGuard 50EC', brand: 'AgroShield', category: 'Bio-pesticide', priceMinor: 89000, kind: 'product', pack: [1, 'l'], weight: 1100 },
+  { id: 'lst-10', slug: 'neemol-03ec', name: 'Neemol 0.3EC', brand: 'Shobuj', category: 'Bio-pesticide', priceMinor: 37000, kind: 'product', pack: [500, 'ml'], weight: 540 },
+  { id: 'lst-11', slug: 'rootshield-bio', name: 'RootShield Bio', brand: 'Shobuj', category: 'Bio-pesticide', priceMinor: 45500, kind: 'product', pack: [1, 'kg'], weight: 1030 },
+  { id: 'lst-12', slug: 'vetcare-oxytet-20', name: 'VetCare Oxytet 20', brand: 'VetCare', category: 'Veterinary', priceMinor: 118000, kind: 'product', restricted: true, pack: [100, 'ml'], weight: 130 },
+  { id: 'lst-13', slug: 'poultrycare-amox', name: 'PoultryCare Amox', brand: 'VetCare', category: 'Veterinary', priceMinor: 96000, kind: 'product', restricted: true, pack: [100, 'g'], weight: 120 },
   { id: 'lst-14', slug: 'drone-spraying', name: 'Drone Spraying Service', brand: 'AgroShield', category: 'Service', priceMinor: 450000, kind: 'service' },
   { id: 'lst-15', slug: 'soil-health-test', name: 'Soil Health Test', brand: 'AgroLab', category: 'Service', priceMinor: 120000, kind: 'service' },
   { id: 'lst-16', slug: 'agronomist-consultation', name: 'Agronomist Consultation', brand: 'AgroLab', category: 'Service', priceMinor: 80000, kind: 'service' },
@@ -57,7 +59,7 @@ const CATALOGUE: Seedling[] = [
 
 /** Named ids so tests and review scripts can reach specific states directly. */
 export const SEED = {
-  readyListingId: 'lst-01',
+  readyListingId: 'lst-09',
   listingWithUnverifiedCertificateId: 'lst-03',
   listingWithoutImageId: 'lst-08',
   listingWithFlaggedImageId: 'lst-11',
@@ -182,7 +184,7 @@ export function buildOrders(listings: Listing[]): OrderDetail[] {
   const mk = (
     id: string, number: string, status: OrderDetail['status'],
     deliveryType: OrderDetail['deliveryType'], buyer: string, lines: OrderLine[],
-    address: string, days: number,
+    address: string, days: number, coords: [number, number] | null,
   ): OrderDetail => {
     const subtotal = lines.reduce((s, l) => s + l.lineTotal.amountMinor, 0)
     const commission = Math.round(subtotal * 0.1)
@@ -198,6 +200,9 @@ export function buildOrders(listings: Listing[]): OrderDetail[] {
       deliveryAddress: address,
       deliveryContactPhone: '+8801812345678',
       deliveryGeographyName: address.split(',').pop()!.trim(),
+      location: coords
+        ? { lat: coords[0], lng: coords[1], precision: 'exact' as const }
+        : { lat: null, lng: null, precision: 'none' as const },
       history: [
         { id: `${id}-h1`, fromStatus: null, toStatus: 'pending_payment', reason: null, changedBy: buyer, occurredAt: iso(days) },
         { id: `${id}-h2`, fromStatus: 'pending_payment', toStatus: 'paid', reason: null, changedBy: 'system', occurredAt: iso(days) },
@@ -211,21 +216,21 @@ export function buildOrders(listings: Listing[]): OrderDetail[] {
 
   return [
     mk('ord-01', 'AM-2026-004311', 'confirmed', 'own', 'Karim Traders',
-       [line(1, byId('lst-01'), 20), line(2, byId('lst-03'), 6)], 'Village Road 4, Savar, Dhaka', 3),
+       [line(1, byId('lst-01'), 20), line(2, byId('lst-03'), 6)], 'Village Road 4, Savar, Dhaka', 3, [23.8583, 90.2667]),
     mk('ord-02', 'AM-2026-004312', 'confirmed', 'partner', 'Rahim Agro Store',
-       [line(1, byId('lst-07'), 12)], 'Bazar Para, Bogura Sadar, Bogura', 4),
+       [line(1, byId('lst-07'), 12)], 'Bazar Para, Bogura Sadar, Bogura', 4, [24.8465, 89.3773]),
     mk('ord-03', 'AM-2026-004313', 'processing', 'own', 'Sunrise Farms',
-       [line(1, byId('lst-11'), 3), line(2, byId('lst-10'), 8)], 'Char Bhadrasan, Faridpur', 6),
+       [line(1, byId('lst-11'), 3), line(2, byId('lst-10'), 8)], 'Char Bhadrasan, Faridpur', 6, [23.4607, 89.8429]),
     mk('ord-04', 'AM-2026-004314', 'shipped', 'partner', 'Green Valley Ltd',
-       [line(1, byId('lst-02'), 30)], 'Kotwali, Comilla', 8),
+       [line(1, byId('lst-02'), 30)], 'Kotwali, Comilla', 8, [23.4607, 91.1809]),
     mk('ord-05', 'AM-2026-004315', 'delivered', 'own', 'Meherpur Krishi',
-       [line(1, byId('lst-09'), 10)], 'Gangni, Meherpur', 14),
+       [line(1, byId('lst-09'), 10)], 'Gangni, Meherpur', 14, null),
     mk('ord-06', 'AM-2026-004316', 'completed', 'partner', 'Delta Agro',
-       [line(1, byId('lst-13'), 24)], 'Rupsha, Khulna', 21),
+       [line(1, byId('lst-13'), 24)], 'Rupsha, Khulna', 21, [22.7965, 89.5762]),
     mk('ord-07', 'AM-2026-004317', 'confirmed', 'own', 'Padma Seeds',
-       [line(1, byId('lst-08'), 40)], 'Charghat, Rajshahi', 2),
+       [line(1, byId('lst-08'), 40)], 'Charghat, Rajshahi', 2, null),
     mk('ord-08', 'AM-2026-004318', 'cancelled', 'partner', 'Hill Tract Agro',
-       [line(1, byId('lst-12'), 1)], 'Rangamati Sadar, Rangamati', 30),
+       [line(1, byId('lst-12'), 1)], 'Rangamati Sadar, Rangamati', 30, [22.6533, 92.1752]),
   ]
 }
 
@@ -260,10 +265,14 @@ export function buildMembers(): Member[] {
 export function buildDiscounts(): Discount[] {
   const d = (n: number) => new Date(Date.now() + n * 864e5).toISOString()
   return [
-    { id: 'off-01', code: 'MONSOON10', name: 'Monsoon 10% off fertiliser', basis: 'percentage', discountPercent: 10, discountAmount: null, maxDiscount: bdt(50000), minOrder: bdt(100000), scope: { kind: 'category', categoryId: 'cat-fertiliser' }, startsAt: d(-10), endsAt: d(20), status: 'active', isStackable: false, stackPriority: 5, stackGroup: null, maxRedemptions: 500, redemptionCount: 143 },
-    { id: 'off-02', code: 'UREA50', name: '৳500 off Urea', basis: 'fixed', discountPercent: null, discountAmount: bdt(50000), maxDiscount: null, minOrder: bdt(200000), scope: { kind: 'listing', listingIds: ['lst-01'] }, startsAt: d(-5), endsAt: d(15), status: 'active', isStackable: false, stackPriority: 5, stackGroup: null, maxRedemptions: null, redemptionCount: 22 },
-    { id: 'off-03', code: 'SEEDBOOST', name: 'Seed season 15%', basis: 'percentage', discountPercent: 15, discountAmount: null, maxDiscount: null, minOrder: null, scope: { kind: 'category', categoryId: 'cat-seed' }, startsAt: d(3), endsAt: d(45), status: 'draft', isStackable: true, stackPriority: 2, stackGroup: 'seasonal', maxRedemptions: null, redemptionCount: 0 },
-    { id: 'off-04', code: 'EQUIP5', name: 'Equipment 5%', basis: 'percentage', discountPercent: 5, discountAmount: null, maxDiscount: null, minOrder: null, scope: { kind: 'listing', listingIds: ['lst-11', 'lst-12'] }, startsAt: d(-60), endsAt: d(-2), status: 'expired', isStackable: false, stackPriority: 1, stackGroup: null, maxRedemptions: null, redemptionCount: 61 },
+    // These two deliberately collide: a type-wide offer and a single-product
+    // offer over the same days, at equal priority and neither stackable. That
+    // is the ambiguous case the editor refuses to save.
+    { id: 'off-01', code: 'INSECT10', name: 'Insecticide season 10%', basis: 'percentage', discountPercent: 10, discountAmount: null, maxDiscount: bdt(50000), minOrder: bdt(100000), scope: { kind: 'category', categoryId: 'cat-insecticide' }, startsAt: d(-10), endsAt: d(20), status: 'active', isStackable: false, stackPriority: 5, stackGroup: null, maxRedemptions: 500, redemptionCount: 143 },
+    { id: 'off-02', code: 'SONAR50', name: '৳500 off Sonar 20SL', basis: 'fixed', discountPercent: null, discountAmount: bdt(50000), maxDiscount: null, minOrder: bdt(200000), scope: { kind: 'listing', listingIds: ['lst-01'] }, startsAt: d(-5), endsAt: d(15), status: 'active', isStackable: false, stackPriority: 5, stackGroup: null, maxRedemptions: null, redemptionCount: 22 },
+    { id: 'off-03', code: 'FUNGI15', name: 'Fungicide pre-monsoon 15%', basis: 'percentage', discountPercent: 15, discountAmount: null, maxDiscount: null, minOrder: null, scope: { kind: 'category', categoryId: 'cat-fungicide' }, startsAt: d(3), endsAt: d(45), status: 'draft', isStackable: true, stackPriority: 2, stackGroup: 'seasonal', maxRedemptions: null, redemptionCount: 0 },
+    { id: 'off-04', code: 'BIO8', name: 'Bio-pesticide 8%', basis: 'percentage', discountPercent: 8, discountAmount: null, maxDiscount: null, minOrder: null, scope: { kind: 'category', categoryId: 'cat-bio-pesticide' }, startsAt: d(-2), endsAt: d(30), status: 'active', isStackable: true, stackPriority: 3, stackGroup: 'seasonal', maxRedemptions: null, redemptionCount: 17 },
+    { id: 'off-05', code: 'VET5', name: 'Veterinary 5%', basis: 'percentage', discountPercent: 5, discountAmount: null, maxDiscount: null, minOrder: null, scope: { kind: 'category', categoryId: 'cat-veterinary' }, startsAt: d(-60), endsAt: d(-2), status: 'expired', isStackable: false, stackPriority: 1, stackGroup: null, maxRedemptions: null, redemptionCount: 61 },
   ]
 }
 

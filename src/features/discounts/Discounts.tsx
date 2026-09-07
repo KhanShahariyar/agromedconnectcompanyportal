@@ -25,8 +25,17 @@ export function Discounts() {
 
   const discounts = useQuery(['discounts'], () => api.listDiscounts({ page: 1, pageSize: 50 }))
   const listings = useQuery(['listings', 'all'], () => api.listListings({ page: 1, pageSize: 100 }))
-  const margin = useQuery(['margin', selected], () =>
-    api.getMarginBreakdown(listings.data?.items[0]?.id ?? 'lst-01', selected))
+  // Default to a live discount on a product it actually covers, so the panel
+  // answers "what does this discount cost me" rather than showing a zero.
+  const active = discounts.data?.items.find((x) => x.status === 'active') ?? null
+  const focusId = selected ?? active?.id ?? null
+  const focus = discounts.data?.items.find((x) => x.id === focusId) ?? null
+  const focusListing =
+    focus?.scope.kind === 'listing'
+      ? focus.scope.listingIds[0]
+      : listings.data?.items.find((l) => l.categoryId === (focus?.scope.kind === 'category' ? focus.scope.categoryId : ''))?.id
+  const margin = useQuery(['margin', focusListing ?? '', focusId ?? ''], () =>
+    api.getMarginBreakdown(focusListing ?? listings.data?.items[0]?.id ?? 'lst-01', focusId))
 
   const { rows, conflicts } = useMemo(() => {
     const ds = discounts.data?.items ?? []
@@ -49,7 +58,10 @@ export function Discounts() {
         seen.add(key)
         return true
       })
-    const conflicted = new Set(all.flatMap((c) => c.discountIds))
+    // Mark the clash per product AND discount. Keying on the discount alone
+    // painted "Insecticide season 10%" as competing on every insecticide, even
+    // the ones where it is the only offer — a warning where there is no problem.
+    const conflicted = new Set(all.flatMap((c) => c.discountIds.map((d) => `${c.listingId}|${d}`)))
 
     const listingIds = (d: Discount) =>
       d.scope.kind === 'listing' ? d.scope.listingIds : (categories[d.scope.categoryId] ?? [])
@@ -59,7 +71,10 @@ export function Discounts() {
       if (d.status === 'expired' || d.status === 'cancelled') continue
       for (const lid of listingIds(d)) {
         const bars = byListing.get(lid) ?? []
-        bars.push({ id: d.id, label: d.name, start: d.startsAt, end: d.endsAt, conflict: conflicted.has(d.id) })
+        bars.push({
+          id: d.id, label: d.name, start: d.startsAt, end: d.endsAt,
+          conflict: conflicted.has(`${lid}|${d.id}`),
+        })
         byListing.set(lid, bars)
       }
     }
@@ -104,7 +119,7 @@ export function Discounts() {
             </ChartFrame>
           </div>
 
-          <ChartFrame title={t('discounts.margin')} subtitle={t('discounts.margin.sub')} encoding="waterfall">
+          <ChartFrame title={t('discounts.margin')} subtitle={focus ? focus.name : t('discounts.margin.sub')} encoding="waterfall">
             <AsyncBoundary query={margin}>
               {(m) => (
                 <Waterfall

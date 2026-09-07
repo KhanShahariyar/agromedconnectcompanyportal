@@ -75,8 +75,11 @@ export const ROLE_PERMISSIONS: Record<PortalRole, string[]> = {
     'payout.read', 'payout.request', 'payout.approve', 'settlement.read',
     'review.respond', 'report.read',
   ],
+  // Employee runs day-to-day operations: orders, stock, reviews, reports.
+  // Deliberately NOT catalogue management (catalog.write / catalog.publish) and
+  // NOT the company account itself — those belong to an Admin.
   manager: [
-    'catalog.read', 'catalog.write', 'catalog.publish',
+    'catalog.read',
     'inventory.read', 'inventory.write',
     'order.read', 'order.fulfil', 'order.cancel',
     'offer.manage', 'pricing.read', 'pricing.write',

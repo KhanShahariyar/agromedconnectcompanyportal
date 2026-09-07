@@ -12,6 +12,8 @@ import { MockAdapter } from '@/data/mock/MockAdapter'
 import { CompanyShell } from '@/layouts/CompanyShell'
 import { COMPANY_NAV, COMPANY_NAV_ACCOUNT, COMPANY_NAV_SUPPORT, DELIVERY_NAV } from '@/layouts/NavConfig'
 import { Settings } from '@/features/misc/Settings'
+import { mayChoosePath } from '@/features/orders/machine'
+import { googleMapsDirections } from '@/features/delivery/DeliveryLocation'
 import { enUS } from '@/i18n/locales/en-US'
 import { bnBD } from '@/i18n/locales/bn-BD'
 import type { Locale } from '@/i18n/format'
@@ -91,18 +93,19 @@ describe('audit: removals (C11)', () => {
   })
 })
 
-describe('audit: delivery mode is never company-editable (C14)', () => {
-  it('offers no control to change it on Settings', async () => {
+describe('audit: delivery mode never appears in the company portal (C14)', () => {
+  it('is absent from Settings entirely — not shown, not editable', async () => {
     wrap(<Settings />)
-    expect(await screen.findByTestId('delivery-mode')).toBeInTheDocument()
+    // Wait for the screen to settle before asserting an absence.
+    expect(await screen.findByRole('heading', { name: /settings/i })).toBeInTheDocument()
+    expect(screen.queryByTestId('delivery-mode')).not.toBeInTheDocument()
     expect(screen.queryByRole('radiogroup', { name: /delivery/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: /delivery/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: /delivery/i })).not.toBeInTheDocument()
   })
 
-  it('says who assigned it and how to change it', async () => {
-    wrap(<Settings />)
-    expect(await screen.findByTestId('delivery-mode')).toHaveTextContent(/contact support/i)
+  it('offers no per-order delivery-path choice either', () => {
+    expect(mayChoosePath()).toBe(false)
   })
 
   it('is rejected by the data layer even if a screen tried', async () => {
@@ -142,6 +145,43 @@ describe('audit: bilingual completeness (C7)', () => {
 
   it('keeps the two dictionaries the same size', () => {
     expect(Object.keys(bnBD).length).toBe(Object.keys(enUS).length)
+  })
+})
+
+describe('audit: an Employee never sees the company account or the catalogue', () => {
+  const shell = (role: 'owner' | 'manager') =>
+    wrap(<CompanyShell organisationName="X" userName="Y" verificationStatus="verified" onSignOut={() => {}}><div /></CompanyShell>, 'en-US', role)
+
+  const hrefs = () => [...document.querySelectorAll('aside a')].map((a) => a.getAttribute('href'))
+
+  it('hides products, services, solutions and settings from an Employee', () => {
+    shell('manager')
+    for (const gone of ['/products', '/services', '/solutions', '/settings']) {
+      expect(hrefs()).not.toContain(gone)
+    }
+  })
+
+  it('still gives an Employee the day-to-day screens', () => {
+    shell('manager')
+    for (const kept of ['/orders', '/inventory', '/reviews', '/reports']) {
+      expect(hrefs()).toContain(kept)
+    }
+  })
+
+  it('gives an Admin all of them', () => {
+    shell('owner')
+    for (const kept of ['/products', '/services', '/solutions', '/settings', '/payments']) {
+      expect(hrefs()).toContain(kept)
+    }
+  })
+})
+
+describe('audit: directions always open Google Maps', () => {
+  it('for a pinned order and for one with only an address', () => {
+    expect(googleMapsDirections({ lat: 1, lng: 2, precision: 'exact' }, 'a'))
+      .toMatch(/^https:\/\/www\.google\.com\/maps\/dir\//)
+    expect(googleMapsDirections({ lat: null, lng: null, precision: 'none' }, 'a'))
+      .toMatch(/^https:\/\/www\.google\.com\/maps\/dir\//)
   })
 })
 

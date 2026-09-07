@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { MapContainer, Marker, TileLayer } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
 import { useData } from '@/data/DataProvider'
 import { useQuery } from '@/data/useQuery'
 import { useFormat, useT } from '@/i18n/LocaleProvider'
 import { AsyncBoundary, Badge, Button, Card, Field, Input, Modal, SectionLabel } from '@/ui'
 import { Gate } from '@/access/Gate'
+import { DeliveryLocation } from './DeliveryLocation'
 
 export function DeliveryDetail() {
   const t = useT()
@@ -21,7 +20,6 @@ export function DeliveryDetail() {
   return (
     <AsyncBoundary query={q}>
       {(a) => {
-        const hasPin = a.location.precision === 'exact' && a.location.lat !== null && a.location.lng !== null
         return (
           <div className="space-y-4 pb-28">
             <div className="flex items-center gap-2">
@@ -29,44 +27,13 @@ export function DeliveryDetail() {
               <Badge tone={a.status === 'delivered' ? 'success' : 'info'}>{t(`assign.${a.status}` as never)}</Badge>
             </div>
 
-            {hasPin ? (
-              <div data-testid="delivery-map" className="overflow-hidden rounded-card border border-line" style={{ height: 220 }}>
-                <MapContainer center={[a.location.lat!, a.location.lng!]} zoom={14} style={{ height: '100%', width: '100%' }}>
-                  <TileLayer
-                    attribution='&copy; OpenStreetMap contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={[a.location.lat!, a.location.lng!]} />
-                </MapContainer>
-              </div>
-            ) : (
-              /* R1 — the normal case until the farmer app captures coordinates.
-                 A map centred on a district and called a delivery address is a
-                 lie the courier would act on. */
-              <div data-testid="no-map-notice" className="rounded-card border border-line bg-sunken p-4 text-sm text-ink-soft">
-                {t('delivery.noMap')}
-              </div>
-            )}
-
             <Card className="p-4">
-              <div data-testid="delivery-address" className="text-base text-ink">{a.deliveryAddress}</div>
-              <div className="mt-0.5 text-sm text-ink-faint">{a.geographyName}</div>
-              <div className="mt-3 flex gap-2">
-                {a.buyerPhone && (
-                  <a href={`tel:${a.buyerPhone}`} className="inline-flex min-h-touch flex-1 items-center justify-center rounded-md border border-line bg-panel px-4 text-sm text-ink">
-                    {t('delivery.call')}
-                  </a>
-                )}
-                {hasPin && (
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${a.location.lat}&mlon=${a.location.lng}#map=16/${a.location.lat}/${a.location.lng}`}
-                    target="_blank" rel="noreferrer"
-                    className="inline-flex min-h-touch flex-1 items-center justify-center rounded-md border border-line bg-panel px-4 text-sm text-ink"
-                  >
-                    {t('delivery.directions')}
-                  </a>
-                )}
-              </div>
+              <DeliveryLocation
+                location={a.location}
+                address={a.deliveryAddress}
+                geographyName={a.geographyName}
+                phone={a.buyerPhone}
+              />
             </Card>
 
             {a.hasRestrictedItems && (

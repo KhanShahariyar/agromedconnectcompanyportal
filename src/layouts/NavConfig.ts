@@ -23,10 +23,10 @@ export interface NavItem {
 export const COMPANY_NAV: NavItem[] = [
   { to: '/', labelKey: 'nav.dashboard', icon: LayoutGrid, end: true },
   { to: '/market', labelKey: 'nav.market', icon: LineChart },
-  { to: '/products', labelKey: 'nav.products', icon: Package, action: 'catalog.read' },
-  { to: '/services', labelKey: 'nav.services', icon: Wrench, action: 'catalog.read' },
-  { to: '/solutions', labelKey: 'nav.solutions', icon: Layers, action: 'catalog.read' },
-  { to: '/inventory', labelKey: 'nav.inventory', icon: Boxes, action: 'catalog.read' },
+  { to: '/products', labelKey: 'nav.products', icon: Package, action: 'product.create' },
+  { to: '/services', labelKey: 'nav.services', icon: Wrench, action: 'service.create' },
+  { to: '/solutions', labelKey: 'nav.solutions', icon: Layers, action: 'product.create' },
+  { to: '/inventory', labelKey: 'nav.inventory', icon: Boxes, action: 'inventory.write' },
   { to: '/orders', labelKey: 'nav.orders', icon: ShoppingCart, action: 'order.read' },
   { to: '/discounts', labelKey: 'nav.discounts', icon: Tags, action: 'discount.manage' },
   { to: '/reviews', labelKey: 'nav.reviews', icon: Star, action: 'order.read' },
@@ -39,7 +39,7 @@ export const COMPANY_NAV_ACCOUNT: NavItem[] = [
   { to: '/profile', labelKey: 'nav.profile', icon: Building2 },
   { to: '/verification', labelKey: 'nav.verification', icon: ShieldCheck, action: 'certificate.read' },
   { to: '/team', labelKey: 'nav.team', icon: Users, action: 'member.read' },
-  { to: '/settings', labelKey: 'nav.settings', icon: Settings },
+  { to: '/settings', labelKey: 'nav.settings', icon: Settings, action: 'organisation.manage' },
 ]
 
 export const COMPANY_NAV_SUPPORT: NavItem[] = [

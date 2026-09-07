@@ -1,4 +1,4 @@
-import type { Uuid, Money, IsoDateTime } from './common'
+import type { Uuid, Money, IsoDateTime, GeoPoint } from './common'
 
 export const ORDER_STATUSES = [
   'pending_payment', 'paid', 'confirmed', 'processing',
@@ -92,6 +92,8 @@ export interface OrderDetail extends OrderSummary {
   deliveryAddress: string | null
   deliveryContactPhone: string | null
   deliveryGeographyName: string | null
+  /** Same shape the courier sees, so both roles read one source of truth. */
+  location: GeoPoint
   history: StatusHistoryEntry[]
   shipment: Shipment | null
   /** Derived server-side so the UI never guesses. */

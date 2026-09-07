@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useData } from '@/data/DataProvider'
 import { useQuery } from '@/data/useQuery'
@@ -6,8 +6,12 @@ import { useFormat, useT } from '@/i18n/LocaleProvider'
 import { AsyncBoundary, Badge, Button, Card, PageHeader, SectionLabel, Stepper, Table } from '@/ui'
 import type { Column } from '@/ui'
 import { Gate } from '@/access/Gate'
-import { currentIndex, isAwaitingPlatform, mayChoosePath, stepsFor } from './machine'
-import type { DeliveryMode, OrderLine, OrderDetail as Detail } from '@/data/contracts'
+
+// Lazily loaded so Leaflet does not land in the main bundle for every screen.
+const DeliveryLocation = lazy(() =>
+  import('@/features/delivery/DeliveryLocation').then((m) => ({ default: m.DeliveryLocation })))
+import { currentIndex, isAwaitingPlatform, stepsFor } from './machine'
+import type { OrderLine, OrderDetail as Detail } from '@/data/contracts'
 import { ORDER_STATUSES } from '@/data/contracts'
 import type { Translate } from '@/i18n/LocaleProvider'
 
@@ -19,7 +23,7 @@ function statusLabel(t: Translate, value: string): string {
   return value
 }
 
-export function OrderDetail({ deliveryMode }: { deliveryMode: DeliveryMode }) {
+export function OrderDetail() {
   const t = useT()
   const f = useFormat()
   const api = useData()
@@ -94,31 +98,31 @@ export function OrderDetail({ deliveryMode }: { deliveryMode: DeliveryMode }) {
               </div>
 
               <Card className="p-5">
-                <SectionLabel>{t('order.deliveryPath')}</SectionLabel>
-                <p className="mb-4 text-sm text-ink">
-                  {t(`order.path.${o.deliveryType === 'partner' ? 'partner' : 'own'}` as never)}
-                </p>
+                <SectionLabel>{t('order.deliveryLocation')}</SectionLabel>
+                <Suspense fallback={<div className="h-[220px] animate-pulse rounded-card bg-sunken" />}>
+                  <DeliveryLocation
+                    location={o.location}
+                    address={o.deliveryAddress ?? ''}
+                    geographyName={o.deliveryGeographyName}
+                    phone={o.deliveryContactPhone}
+                  />
+                </Suspense>
 
-                {/* Only when the platform assigned "both" is this a choice (C14). */}
-                {mayChoosePath(deliveryMode, o) && (
-                  <fieldset className="mb-4" role="group" aria-label={t('order.deliveryPath')}>
-                    <label className="mb-1 flex items-center gap-2 text-sm">
-                      <input type="radio" name="path" defaultChecked={o.deliveryType !== 'partner'} /> {t('order.path.own')}
-                    </label>
-                    <label className="flex items-center gap-2 text-sm">
-                      <input type="radio" name="path" defaultChecked={o.deliveryType === 'partner'} /> {t('order.path.partner')}
-                    </label>
-                  </fieldset>
-                )}
+                <div className="mt-5">
+                  <SectionLabel>{t('order.deliveryPath')}</SectionLabel>
+                  <p className="mb-4 text-sm text-ink">
+                    {t(`order.path.${o.deliveryType}` as never)}
+                  </p>
 
-                <Stepper
-                  currentIndex={idx}
-                  pendingNote={awaiting ? t('order.awaitingPlatform') : undefined}
-                  steps={steps.map((s) => {
-                    const entry = o.history.find((h) => h.toStatus === s)
-                    return { key: s, label: t(`step.${s}` as never), at: entry?.occurredAt, actor: entry?.changedBy }
-                  })}
-                />
+                  <Stepper
+                    currentIndex={idx}
+                    pendingNote={awaiting ? t('order.awaitingPlatform') : undefined}
+                    steps={steps.map((s) => {
+                      const entry = o.history.find((h) => h.toStatus === s)
+                      return { key: s, label: t(`step.${s}` as never), at: entry?.occurredAt, actor: entry?.changedBy }
+                    })}
+                  />
+                </div>
               </Card>
             </div>
           </div>

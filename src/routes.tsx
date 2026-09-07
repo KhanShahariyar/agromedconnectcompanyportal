@@ -106,7 +106,7 @@ function Shell() {
             <Route path="/solutions" element={<SolutionCenter />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/orders" element={<OrderList />} />
-            <Route path="/orders/:id" element={<OrderDetail deliveryMode={session.organisation.deliveryMode} />} />
+            <Route path="/orders/:id" element={<OrderDetail />} />
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/discounts/new" element={<DiscountEditor />} />
             <Route path="/discounts/:id/edit" element={<DiscountEditor />} />

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Menu, X, LogOut } from 'lucide-react'
+import { PanelLeft, X, LogOut } from 'lucide-react'
 import { Logo } from '@/ui/Logo'
 import { useT } from '@/i18n/LocaleProvider'
 import { useCan } from '@/access/Gate'
@@ -9,6 +9,12 @@ import type { VerificationStatus } from '@/data/contracts'
 import { COMPANY_NAV, COMPANY_NAV_ACCOUNT, COMPANY_NAV_SUPPORT } from './NavConfig'
 import type { NavItem } from './NavConfig'
 import { LocaleToggle } from './LocaleToggle'
+
+/** jsdom and any SSR pass have no matchMedia; default to the wide layout. */
+function isWide(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true
+  return window.matchMedia('(min-width: 1024px)').matches
+}
 
 function NavGroup({ items, heading }: { items: NavItem[]; heading?: string }) {
   const t = useT()
@@ -56,16 +62,29 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
   children: ReactNode
 }) {
   const t = useT()
-  const [open, setOpen] = useState(false)
+  // One state, one button, both breakpoints. On a wide screen the rail starts
+  // open and collapsing it gives the content the full width; on a narrow one it
+  // starts closed and behaves as an overlay drawer.
+  const [open, setOpen] = useState(() => isWide())
   const unverified = verificationStatus !== 'verified'
+
+  // Lock the page behind the overlay drawer only — never on desktop, where the
+  // rail sits in normal flow and the page must stay scrollable.
+  useEffect(() => {
+    if (!open || isWide()) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [open])
 
   return (
     <div className="flex min-h-screen bg-base">
       {open && <div className="fixed inset-0 z-30 bg-ink/30 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside
-        className={`fixed top-0 z-40 flex h-screen w-[248px] shrink-0 transform flex-col border-r border-line bg-panel transition-transform lg:sticky lg:translate-x-0 ${
-          open ? 'translate-x-0' : '-translate-x-full'
+        aria-hidden={!open}
+        className={`fixed top-0 z-40 flex h-screen w-[248px] shrink-0 transform flex-col overflow-hidden border-r border-line bg-panel transition-transform lg:sticky ${
+          open ? 'translate-x-0' : '-translate-x-full lg:hidden'
         }`}
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-4">
@@ -76,7 +95,11 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
               <div className="text-[10px] text-ink-faint">{t('app.portal')}</div>
             </div>
           </div>
-          <button className="text-ink-soft lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
+          <button
+            className="min-h-touch min-w-touch text-ink-soft"
+            onClick={() => setOpen(false)}
+            aria-label={t('nav.closeMenu')}
+          >
             <X size={18} />
           </button>
         </div>
@@ -101,8 +124,13 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-base/90 px-4 backdrop-blur sm:px-6">
-          <button className="text-ink-soft lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
-            <Menu size={20} />
+          <button
+            className="min-h-touch min-w-touch text-ink-soft"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={t('nav.toggleMenu')}
+            aria-expanded={open}
+          >
+            <PanelLeft size={20} />
           </button>
           {/* No search here (C11) — search lives on the lists that need it. */}
           <div className="flex-1" />

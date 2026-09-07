@@ -218,15 +218,33 @@ export function Waterfall({ steps, caption, format }: {
 
 /* -------------------------------------------------------- GanttTimeline */
 
+export interface DiscountBar {
+  id: string
+  label: string
+  start: string
+  end: string | null
+  conflict?: boolean
+}
+
+export interface DiscountRow {
+  id: string
+  label: string
+  bars: DiscountBar[]
+}
+
 /**
  * The highest-value chart in the portal.
  *
- * pricing.offer allows two discounts to cover the same listing over the same
- * dates. A list of discounts hides that; a timeline makes an accidental overlap
- * something you see rather than something a customer reports.
+ * pricing.offer lets two discounts cover the same product over the same dates.
+ * A list hides that; a timeline makes an accidental overlap something you see.
+ *
+ * An earlier version stacked the bars inside a single 28px row, which read as a
+ * broken progress bar rather than a schedule. Each discount now gets its own
+ * labelled line under its product, so an overlap is visible as two bars sitting
+ * above one another, with the shared span shaded and named.
  */
 export function GanttTimeline({ rows, from, to, onSelect }: {
-  rows: { id: string; label: string; bars: { id: string; label: string; start: string; end: string | null; conflict?: boolean }[] }[]
+  rows: DiscountRow[]
   from: string
   to: string
   onSelect?: (barId: string) => void
@@ -235,53 +253,127 @@ export function GanttTimeline({ rows, from, to, onSelect }: {
   const t0 = new Date(from).getTime()
   const t1 = new Date(to).getTime()
   const span = Math.max(1, t1 - t0)
-  const pct = (iso: string | null, fallback: number) =>
-    ((iso ? new Date(iso).getTime() : fallback) - t0) / span * 100
+  const pct = (ms: number) => ((ms - t0) / span) * 100
+  const clamp = (v: number) => Math.min(100, Math.max(0, v))
+
+  const now = Date.now()
+  const nowPct = now >= t0 && now <= t1 ? pct(now) : null
+
+  // Month boundaries give the eye something to measure against.
+  const ticks: { at: number; label: string }[] = []
+  const cursor = new Date(t0)
+  cursor.setDate(1)
+  cursor.setHours(0, 0, 0, 0)
+  while (cursor.getTime() <= t1) {
+    if (cursor.getTime() >= t0) ticks.push({ at: pct(cursor.getTime()), label: f.date(cursor.toISOString(), 'short') })
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+
+  /** Where two or more bars in a row cover the same days. */
+  function overlapsFor(bars: DiscountBar[]): { left: number; width: number }[] {
+    const spans = bars.map((b) => ({
+      s: new Date(b.start).getTime(),
+      e: b.end ? new Date(b.end).getTime() : t1,
+    }))
+    const out: { left: number; width: number }[] = []
+    for (let i = 0; i < spans.length; i++) {
+      for (let j = i + 1; j < spans.length; j++) {
+        const s = Math.max(spans[i]!.s, spans[j]!.s)
+        const e = Math.min(spans[i]!.e, spans[j]!.e)
+        if (e > s) out.push({ left: clamp(pct(s)), width: Math.max(1, clamp(pct(e)) - clamp(pct(s))) })
+      }
+    }
+    return out
+  }
 
   return (
     <>
-      <div className="mb-2 flex justify-between text-xs text-ink-faint">
-        <span>{f.date(from, 'short')}</span>
-        <span>{f.date(to, 'short')}</span>
-      </div>
-      <ul className="space-y-2">
-        {rows.map((r) => (
-          <li key={r.id} className="grid grid-cols-[9rem_1fr] items-center gap-3">
-            <span className="truncate text-xs text-ink" title={r.label}>{r.label}</span>
-            <div className="relative h-7 rounded-sm bg-sunken/60">
-              {r.bars.map((b, i) => {
-                const left = Math.max(0, pct(b.start, t0))
-                const right = Math.min(100, pct(b.end, t1))
-                return (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={onSelect ? () => onSelect(b.id) : undefined}
-                    title={`${b.label} · ${f.date(b.start, 'short')} – ${b.end ? f.date(b.end, 'short') : '…'}`}
-                    className="absolute rounded-sm border-2 text-[10px] leading-none text-panel"
-                    style={{
-                      left: `${left}%`,
-                      width: `${Math.max(2, right - left)}%`,
-                      top: `${2 + i * 12}px`,
-                      height: '11px',
-                      background: b.conflict ? STATUS.warning : seriesColour(i),
-                      borderColor: TOKENS.panel,
-                      // A conflicting window is hatched as well as coloured, so
-                      // the clash survives greyscale and colour-blind vision.
-                      backgroundImage: b.conflict
-                        ? 'repeating-linear-gradient(45deg, rgba(255,255,255,.55) 0 3px, transparent 3px 6px)'
-                        : undefined,
-                    }}
-                  />
-                )
-              })}
-            </div>
-          </li>
+      <div className="relative mb-2 h-4">
+        {ticks.map((tick) => (
+          <span key={tick.label} className="absolute -translate-x-1/2 text-[10px] text-ink-faint"
+                style={{ left: `${tick.at}%` }}>
+            {tick.label}
+          </span>
         ))}
+      </div>
+
+      <ul className="space-y-4">
+        {rows.map((r) => {
+          const overlaps = overlapsFor(r.bars)
+          return (
+            <li key={r.id}>
+              <div className="mb-1 flex items-center gap-2">
+                <span className="text-xs font-medium text-ink">{r.label}</span>
+                {overlaps.length > 0 && (
+                  <span className="rounded-full border border-warning/50 px-1.5 py-0.5 text-[10px] text-warning">
+                    {r.bars.length} overlap
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                {/* Month gridlines behind everything. */}
+                {ticks.map((tick) => (
+                  <span key={`g-${tick.label}`} aria-hidden className="absolute top-0 h-full w-px bg-line"
+                        style={{ left: `${tick.at}%` }} />
+                ))}
+                {/* The shared span, named by the badge above. */}
+                {overlaps.map((o, i) => (
+                  <span key={`o-${i}`} aria-hidden className="absolute top-0 h-full rounded-sm bg-warning/15"
+                        style={{ left: `${o.left}%`, width: `${o.width}%` }} />
+                ))}
+                {nowPct !== null && (
+                  <span aria-hidden className="absolute top-0 h-full w-0.5 bg-ink/40" style={{ left: `${nowPct}%` }} />
+                )}
+
+                <div className="relative space-y-1.5 py-1">
+                  {r.bars.map((b, i) => {
+                    const left = clamp(pct(new Date(b.start).getTime()))
+                    const right = clamp(pct(b.end ? new Date(b.end).getTime() : t1))
+                    const width = Math.max(3, right - left)
+                    return (
+                      <div key={b.id} className="relative h-6">
+                        <button
+                          type="button"
+                          onClick={onSelect ? () => onSelect(b.id) : undefined}
+                          title={`${b.label} · ${f.date(b.start, 'short')} – ${b.end ? f.date(b.end, 'short') : '…'}`}
+                          className="absolute inset-y-0 flex items-center overflow-hidden rounded-md px-2 text-[11px] font-medium text-panel"
+                          style={{
+                            left: `${left}%`,
+                            width: `${width}%`,
+                            background: b.conflict ? STATUS.warning : seriesColour(i),
+                          }}
+                        >
+                          <span className="truncate">{b.label}</span>
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </li>
+          )
+        })}
       </ul>
+
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-ink-faint">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="h-2 w-4 rounded-sm" style={{ background: seriesColour(0) }} /> Scheduled
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="h-2 w-4 rounded-sm" style={{ background: STATUS.warning }} /> Competing
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="h-2 w-4 rounded-sm bg-warning/15" /> Overlapping days
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="h-3 w-0.5 bg-ink/40" /> Today
+        </span>
+      </div>
+
       <ChartTable
         caption="Discount windows"
-        columns={['Product', 'Discount', 'Starts', 'Ends', 'Overlapping']}
+        columns={['Product', 'Discount', 'Starts', 'Ends', 'Competing']}
         rows={rows.flatMap((r) => r.bars.map((b) => [r.label, b.label, b.start, b.end ?? '—', b.conflict ? 'yes' : 'no']))}
       />
     </>

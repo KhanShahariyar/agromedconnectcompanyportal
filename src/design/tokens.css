@@ -22,7 +22,14 @@
   color-scheme: light;
 }
 
-html, body, #root { height: 100%; }
+/*
+ * min-height, never height.
+ *
+ * `height: 100%` pinned html, body and #root to exactly the viewport while the
+ * page was taller, so everything below the fold became unreachable — the page
+ * simply would not scroll.
+ */
+html, body, #root { min-height: 100%; }
 
 body {
   margin: 0;

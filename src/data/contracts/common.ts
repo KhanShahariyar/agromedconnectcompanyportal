@@ -45,3 +45,14 @@ export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]
 /** G6/C14 — assigned by the platform super admin, never by the company. */
 export const DELIVERY_MODES = ['own', 'partner', 'both'] as const
 export type DeliveryMode = (typeof DELIVERY_MODES)[number]
+
+/**
+ * D3/R1 — coordinates are captured at checkout by the Flutter farmer app.
+ * Until that ships, `precision: 'none'` is the normal case, so every consumer
+ * must render an honest address-only state rather than a misleading pin.
+ */
+export interface GeoPoint {
+  lat: number | null
+  lng: number | null
+  precision: 'exact' | 'none'
+}

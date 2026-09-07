@@ -11,6 +11,7 @@ const order = (over: Partial<OrderDetail>): OrderDetail => ({
   commissionTotal: { amountMinor: 0, currency: 'BDT', display: '৳0' },
   sellerNet: { amountMinor: 0, currency: 'BDT', display: '৳0' },
   deliveryAddress: null, deliveryContactPhone: null, deliveryGeographyName: null,
+  location: { lat: null, lng: null, precision: 'none' },
   history: [], shipment: null, currentStep: 'confirmed', availableTransitions: [], ...over,
 })
 
@@ -27,14 +28,8 @@ describe('fulfilment machines', () => {
     expect(pathFor('pickup')).toBe('own')
   })
 
-  it('offers a per-order path choice only when the platform assigned "both"', () => {
-    expect(mayChoosePath('both', order({ currentStep: 'confirmed' }))).toBe(true)
-    expect(mayChoosePath('partner', order({ currentStep: 'confirmed' }))).toBe(false)
-    expect(mayChoosePath('own', order({ currentStep: 'confirmed' }))).toBe(false)
-  })
-
-  it('withdraws the path choice once the order has moved past confirmation', () => {
-    expect(mayChoosePath('both', order({ currentStep: 'dispatched' }))).toBe(false)
+  it('never offers the company a delivery-path choice — the platform assigns it', () => {
+    expect(mayChoosePath()).toBe(false)
   })
 
   it('knows when a partner order is waiting on the platform, not the company', () => {

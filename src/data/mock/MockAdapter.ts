@@ -449,13 +449,15 @@ export class MockAdapter implements DataAdapter {
   // -------------------------------------------------- market intelligence
   getMarketIntelligence(window: '3m' | '6m' | '12m'): Promise<MarketIntelligence> {
     const months = window === '3m' ? 3 : window === '6m' ? 6 : 12
-    const categories = ['Fertiliser', 'Pesticide', 'Seed', 'Equipment', 'Veterinary']
+    // Everything on this marketplace is an agricultural medicine, so the useful
+    // cut is medicine type, not "category" — which would be a single constant.
+    const categories = ['Insecticide', 'Fungicide', 'Herbicide', 'Bio-pesticide', 'Veterinary']
     const demandTrend: MarketIntelligence['demandTrend'] = []
     for (let m = months - 1; m >= 0; m--) {
       const date = new Date()
       date.setMonth(date.getMonth() - m)
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      const raw = categories.map((c, i) => 40 + ((m * 7 + i * 23) % 60) + (c === 'Seed' ? 30 : 0))
+      const raw = categories.map((c, i) => 40 + ((m * 7 + i * 23) % 60) + (c === 'Insecticide' ? 30 : 0))
       const total = raw.reduce((a, b) => a + b, 0)
       categories.forEach((c, i) =>
         demandTrend.push({ month: key, categoryName: c, orderCount: raw[i]!, shareOfMarket: raw[i]! / total }))
@@ -544,7 +546,7 @@ export class MockAdapter implements DataAdapter {
   // ------------------------------------- reports, reviews, payments, misc
   getPerformanceReport(window: '3m' | '6m' | '12m'): Promise<PerformanceReport> {
     const months = window === '3m' ? 3 : window === '6m' ? 6 : 12
-    const categories = ['Fertiliser', 'Pesticide', 'Seed', 'Equipment']
+    const categories = ['Insecticide', 'Fungicide', 'Herbicide', 'Bio-pesticide', 'Veterinary']
     const revenueByCategory: PerformanceReport['revenueByCategory'] = []
     for (let m = months - 1; m >= 0; m--) {
       const date = new Date(); date.setMonth(date.getMonth() - m)

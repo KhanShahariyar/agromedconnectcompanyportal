@@ -65,11 +65,24 @@ describe('can()', () => {
 })
 
 describe('ROLE_PERMISSIONS mirrors the database seed', () => {
-  it('gives manager everything owner has except payouts, org management and member removal', () => {
+  it('withholds catalogue management, the company account and payouts from an Employee', () => {
     const missing = ROLE_PERMISSIONS.owner.filter((p) => !ROLE_PERMISSIONS.manager.includes(p))
-    expect(missing.sort()).toEqual(
-      ['member.remove', 'organisation.manage', 'payout.approve', 'payout.request'].sort(),
-    )
+    expect(missing.sort()).toEqual([
+      'catalog.publish', 'catalog.write', 'member.remove',
+      'organisation.manage', 'payout.approve', 'payout.request',
+    ].sort())
+  })
+
+  it('blocks an Employee from creating products or services, citing role', () => {
+    expect(can('product.create', manager)).toEqual({ allowed: false, reason: 'role' })
+    expect(can('service.create', manager)).toEqual({ allowed: false, reason: 'role' })
+    expect(can('organisation.manage', manager)).toEqual({ allowed: false, reason: 'role' })
+  })
+
+  it('still lets an Employee run day-to-day operations', () => {
+    expect(can('order.fulfil', manager)).toEqual({ allowed: true })
+    expect(can('inventory.write', manager)).toEqual({ allowed: true })
+    expect(can('review.respond', manager)).toEqual({ allowed: true })
   })
 
   it('keeps delivery_man to the two things a courier does', () => {

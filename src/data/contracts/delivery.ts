@@ -1,16 +1,6 @@
-import type { Uuid, IsoDateTime } from './common'
+import type { Uuid, IsoDateTime, GeoPoint } from './common'
+export type { GeoPoint }
 import type { OrderLine } from './orders'
-
-/**
- * D3/R1 — coordinates are captured at checkout by the Flutter farmer app.
- * Until that ships, `precision: 'none'` is the normal case, so every consumer
- * must render an honest address-only state rather than a misleading pin.
- */
-export interface GeoPoint {
-  lat: number | null
-  lng: number | null
-  precision: 'exact' | 'none'
-}
 
 export type AssignmentStatus = 'assigned' | 'picked_up' | 'delivered' | 'failed'
 
