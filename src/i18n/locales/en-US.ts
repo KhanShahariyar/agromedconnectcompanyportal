@@ -333,4 +333,5 @@ export const enUS = {
   'validation.amount': 'Enter an amount greater than zero',
   'validation.dates': 'The end date must be after the start date',
   'editor.clashesWith': 'Clashes with {name}',
+  'order.path.pickup': 'Buyer collects',
 } as const

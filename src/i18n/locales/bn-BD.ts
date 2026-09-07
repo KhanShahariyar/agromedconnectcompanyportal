@@ -329,4 +329,5 @@ export const bnBD = {
   'validation.amount': 'শূন্যের চেয়ে বড় পরিমাণ দিন',
   'validation.dates': 'শেষ তারিখ শুরুর তারিখের পরে হতে হবে',
   'editor.clashesWith': '{name} এর সাথে সংঘর্ষ',
+  'order.path.pickup': 'ক্রেতা সংগ্রহ করেন',
 } as const

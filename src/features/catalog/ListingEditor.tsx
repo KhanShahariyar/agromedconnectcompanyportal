@@ -94,10 +94,10 @@ export function ListingEditor({ kind }: { kind: 'product' | 'service' }) {
     ? t(kind === 'product' ? 'editor.newProduct' : 'editor.newService')
     : t(kind === 'product' ? 'editor.editProduct' : 'editor.editService')
 
-  return (
-    <AsyncBoundary query={isNew ? { loading: false, data: undefined, refetch: () => {} } : existing}>
-      {() => (
-        <div>
+  // A new listing has nothing to load, and AsyncBoundary reads "no data" as
+  // "empty" — correct for a list, wrong for a create form.
+  const body = (
+    <div>
           <PageHeader title={title} />
           <Card className="max-w-2xl p-5">
             <form onSubmit={submit} className="space-y-4" noValidate>
@@ -155,8 +155,9 @@ export function ListingEditor({ kind }: { kind: 'product' | 'service' }) {
               </div>
             </form>
           </Card>
-        </div>
-      )}
-    </AsyncBoundary>
+    </div>
   )
+
+  if (isNew) return body
+  return <AsyncBoundary query={existing}>{() => body}</AsyncBoundary>
 }

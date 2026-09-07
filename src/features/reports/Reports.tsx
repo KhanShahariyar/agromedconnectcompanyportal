@@ -57,7 +57,7 @@ export function Reports() {
 
                 <ChartFrame title={t('reports.delivery')} subtitle={t('reports.delivery.sub')} encoding="donut">
                   <Donut slices={r.deliveryMix.map((d) => ({
-                    label: t(`order.path.${d.deliveryType === 'partner' ? 'partner' : 'own'}` as never),
+                    label: t(`order.path.${d.deliveryType}` as never),
                     value: d.orderCount,
                   }))} />
                 </ChartFrame>

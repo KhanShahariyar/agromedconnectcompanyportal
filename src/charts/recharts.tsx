@@ -185,7 +185,7 @@ export function Donut({ slices, height = 220, footnote }: {
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
           <Pie isAnimationActive={false} data={slices} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="82%" paddingAngle={2} stroke={TOKENS.panel} strokeWidth={2}>
-            {slices.map((s, i) => <Cell key={s.label} fill={seriesColour(i)} />)}
+            {slices.map((s, i) => <Cell key={`${s.label}-${i}`} fill={seriesColour(i)} />)}
           </Pie>
           <Tooltip content={<TooltipCard format={f.number} />} />
           <Legend wrapperStyle={{ fontSize: 11, color: TOKENS.inkSoft }} />
@@ -194,7 +194,7 @@ export function Donut({ slices, height = 220, footnote }: {
       {/* Counts as well as shares — a percentage alone hides a tiny sample. */}
       <ul className="mt-2 space-y-1 text-xs text-ink-soft">
         {slices.map((s, i) => (
-          <li key={s.label} className="flex items-center gap-2">
+          <li key={`${s.label}-${i}`} className="flex items-center gap-2">
             <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: seriesColour(i) }} />
             <span>{s.label}</span>
             <span className="ml-auto text-ink">
