@@ -73,3 +73,14 @@ export const STATUS = {
 
 /** Colours permitted as text on `base`. Enforced by tokens.test.ts. */
 export const TEXT_ON_BASE = [TOKENS.ink, TOKENS.inkSoft, TOKENS.primary] as const
+
+/**
+ * Fixed-order categorical assignment. Never cycled: index 5 and beyond fall to
+ * the neutral, because no sixth hue survives deuteranopia beside these five.
+ *
+ * Lives here rather than beside the Recharts components so the SVG charts can
+ * use it without pulling Recharts into their bundle chunk.
+ */
+export function seriesColour(index: number): string {
+  return SERIES[index] ?? SERIES_OTHER
+}

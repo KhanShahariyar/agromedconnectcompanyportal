@@ -1,7 +1,6 @@
 import { useFormat } from '@/i18n/LocaleProvider'
-import { SERIES, SERIES_OTHER, STATUS, TOKENS } from '@/design/tokens'
+import { SERIES, SERIES_OTHER, STATUS, TOKENS, seriesColour } from '@/design/tokens'
 import { ChartTable } from './ChartFrame'
-import { seriesColour } from './recharts'
 
 /* --------------------------------------------------------------- Bullet */
 

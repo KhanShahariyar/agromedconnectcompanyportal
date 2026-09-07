@@ -1,8 +1,7 @@
 import { MapContainer, TileLayer, CircleMarker, Tooltip as LeafletTooltip } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useFormat } from '@/i18n/LocaleProvider'
-import { SERIES_OTHER, TOKENS } from '@/design/tokens'
-import { seriesColour } from './recharts'
+import { SERIES_OTHER, TOKENS, seriesColour } from '@/design/tokens'
 import { ChartTable } from './ChartFrame'
 
 export interface DemandCell {

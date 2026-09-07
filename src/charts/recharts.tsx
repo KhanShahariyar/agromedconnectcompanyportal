@@ -4,13 +4,10 @@ import {
 } from 'recharts'
 import type { ReactNode } from 'react'
 import { useFormat } from '@/i18n/LocaleProvider'
-import { SERIES, SERIES_OTHER, TOKENS } from '@/design/tokens'
+import { SERIES_OTHER, TOKENS, seriesColour } from '@/design/tokens'
 import { ChartTable } from './ChartFrame'
 
-/** Fixed-order assignment. Never cycled — a 6th category is "Other". */
-export function seriesColour(index: number): string {
-  return SERIES[index] ?? SERIES_OTHER
-}
+export { seriesColour }
 
 const AXIS = { fontSize: 11, fill: TOKENS.inkFaint }
 const GRID = { stroke: TOKENS.border, strokeDasharray: '2 4' }
