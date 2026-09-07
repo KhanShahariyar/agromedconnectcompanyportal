@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData } from '@/data/DataProvider'
 import { useQuery } from '@/data/useQuery'
 import { useFormat, useT } from '@/i18n/LocaleProvider'
@@ -19,6 +20,7 @@ export function Discounts() {
   const t = useT()
   const f = useFormat()
   const api = useData()
+  const navigate = useNavigate()
   const [selected, setSelected] = useState<string | null>(null)
 
   const discounts = useQuery(['discounts'], () => api.listDiscounts({ page: 1, pageSize: 50 }))
@@ -88,7 +90,7 @@ export function Discounts() {
       <PageHeader
         title={t('discounts.title')}
         description={t('discounts.subtitle')}
-        actions={<Gate action="discount.manage"><Button>{t('discounts.new')}</Button></Gate>}
+        actions={<Gate action="discount.manage"><Button onClick={() => navigate('/discounts/new')}>{t('discounts.new')}</Button></Gate>}
       />
 
       {/* Two charts, two encodings: when discounts collide, and what they cost (C5). */}
@@ -136,7 +138,7 @@ export function Discounts() {
       )}
 
       <AsyncBoundary query={discounts}>
-        {(p) => <Table columns={columns} rows={p.items} rowKey={(d) => d.id} onRowClick={(d) => setSelected(d.id)} />}
+        {(p) => <Table columns={columns} rows={p.items} rowKey={(d) => d.id} onRowClick={(d) => navigate(`/discounts/${d.id}/edit`)} />}
       </AsyncBoundary>
     </div>
   )

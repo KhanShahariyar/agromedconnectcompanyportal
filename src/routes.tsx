@@ -17,6 +17,7 @@ import { AcceptInvitation } from '@/features/auth/AcceptInvitation'
 
 import { ListingList } from '@/features/catalog/ListingList'
 import { ListingDetail } from '@/features/catalog/ListingDetail'
+import { ListingEditor } from '@/features/catalog/ListingEditor'
 import { OrderList } from '@/features/orders/OrderList'
 import { OrderDetail } from '@/features/orders/OrderDetail'
 import { Verification } from '@/features/verification/Verification'
@@ -38,6 +39,7 @@ import { MyDeliveries } from '@/features/delivery/MyDeliveries'
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
 const MarketIntelligence = lazy(() => import('@/features/market/MarketIntelligence').then((m) => ({ default: m.MarketIntelligence })))
 const Inventory = lazy(() => import('@/features/inventory/Inventory').then((m) => ({ default: m.Inventory })))
+const DiscountEditor = lazy(() => import('@/features/discounts/DiscountEditor').then((m) => ({ default: m.DiscountEditor })))
 const Discounts = lazy(() => import('@/features/discounts/Discounts').then((m) => ({ default: m.Discounts })))
 const Reports = lazy(() => import('@/features/reports/Reports').then((m) => ({ default: m.Reports })))
 const DeliveryDetail = lazy(() => import('@/features/delivery/DeliveryDetail').then((m) => ({ default: m.DeliveryDetail })))
@@ -94,14 +96,20 @@ function Shell() {
             <Route path="/" element={<Dashboard userName={session.user.fullName} />} />
             <Route path="/market" element={<MarketIntelligence />} />
             <Route path="/products" element={<ListingList kind="product" />} />
+            <Route path="/products/new" element={<ListingEditor kind="product" />} />
+            <Route path="/products/:id/edit" element={<ListingEditor kind="product" />} />
             <Route path="/products/:id" element={<ListingDetail kind="product" />} />
             <Route path="/services" element={<ListingList kind="service" />} />
+            <Route path="/services/new" element={<ListingEditor kind="service" />} />
+            <Route path="/services/:id/edit" element={<ListingEditor kind="service" />} />
             <Route path="/services/:id" element={<ListingDetail kind="service" />} />
             <Route path="/solutions" element={<SolutionCenter />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/orders" element={<OrderList />} />
             <Route path="/orders/:id" element={<OrderDetail deliveryMode={session.organisation.deliveryMode} />} />
             <Route path="/discounts" element={<Discounts />} />
+            <Route path="/discounts/new" element={<DiscountEditor />} />
+            <Route path="/discounts/:id/edit" element={<DiscountEditor />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/reports" element={<Reports />} />

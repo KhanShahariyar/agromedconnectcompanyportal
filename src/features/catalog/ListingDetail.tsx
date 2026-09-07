@@ -37,6 +37,11 @@ export function ListingDetail({ kind }: { kind: 'product' | 'service' }) {
                     {t('product.publish')}
                   </Button>
                 </Gate>
+                <Gate action="product.create">
+                  <Button variant="secondary" onClick={() => navigate(`${kind === 'product' ? '/products' : '/services'}/${l.id}/edit`)}>
+                    {t(kind === 'product' ? 'editor.editProduct' : 'editor.editService')}
+                  </Button>
+                </Gate>
                 <Gate action="product.delete">
                   <Button variant="secondary" onClick={() => setConfirmDelete(true)}>{t('product.delete')}</Button>
                 </Gate>
