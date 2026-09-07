@@ -85,7 +85,7 @@ export const bnBD = {
   'dash.kpi.fulfilment': 'গড় সরবরাহ সময়',
   'dash.days': '{n} দিন',
   'dash.chart.revenue': 'আয়ের ধারা',
-  'dash.chart.revenue.sub': 'গত ১২ সপ্তাহ',
+  'dash.chart.revenue.sub': 'গত ১২ মাস',
   'dash.chart.pipeline': 'অর্ডার পাইপলাইন',
   'dash.chart.pipeline.sub': 'এখন অর্ডার কোথায় আটকে আছে',
   'dash.chart.sla': 'লক্ষ্যমাত্রার বিপরীতে সরবরাহ',
@@ -296,4 +296,5 @@ export const bnBD = {
   'common.yes': 'হ্যাঁ',
   'common.no': 'না',
   'common.notAvailable': 'আপনার ভূমিকার জন্য উপলব্ধ নয়।',
+  'dash.overview': 'ব্যবসার সারসংক্ষেপ',
 } as const

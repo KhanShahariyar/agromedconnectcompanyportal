@@ -9,9 +9,15 @@ import { ChartTable } from './ChartFrame'
  * "how much stock" but "is it below the reorder point" — a comparison a bar
  * cannot make without the reader doing arithmetic.
  */
-export function Bullet({ rows, caption }: {
+export function Bullet({ rows, caption, lowerIsBetter = false }: {
   rows: { label: string; value: number; target: number; unit?: string | null }[]
   caption: string
+  /**
+   * Whether falling below the threshold is the good outcome. Stock below its
+   * reorder point is a problem; fulfilment days below target is the goal. The
+   * same mark means opposite things, so the caller must say which.
+   */
+  lowerIsBetter?: boolean
 }) {
   const f = useFormat()
   const max = Math.max(...rows.map((r) => Math.max(r.value, r.target)), 1)
@@ -19,7 +25,7 @@ export function Bullet({ rows, caption }: {
     <>
       <ul className="space-y-3">
         {rows.map((r) => {
-          const short = r.value < r.target
+          const short = lowerIsBetter ? r.value > r.target : r.value < r.target
           return (
             <li key={r.label}>
               <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
@@ -47,8 +53,11 @@ export function Bullet({ rows, caption }: {
       </ul>
       <ChartTable
         caption={caption}
-        columns={['Item', 'On hand', 'Reorder point', 'Below point']}
-        rows={rows.map((r) => [r.label, f.number(r.value), f.number(r.target), r.value < r.target ? 'yes' : 'no'])}
+        columns={['Item', 'Value', 'Target', 'Off target']}
+        rows={rows.map((r) => [
+          r.label, f.number(r.value), f.number(r.target),
+          (lowerIsBetter ? r.value > r.target : r.value < r.target) ? 'yes' : 'no',
+        ])}
       />
     </>
   )
@@ -111,9 +120,16 @@ export function Dumbbell({ rows, absentLabel }: {
   absentLabel: string
 }) {
   const f = useFormat()
-  const lo = Math.min(...rows.map((r) => r.min))
-  const hi = Math.max(...rows.map((r) => r.max))
-  const pos = (v: number) => ((v - lo) / Math.max(1, hi - lo)) * 100
+
+  /*
+   * Each row is scaled to its own market range, not to a scale shared across
+   * categories. Shared, a category spanning 400-1000 collapsed into a sliver
+   * beside one spanning 2000-8000, and "where do I sit in this category" — the
+   * only question this chart answers — became unreadable. Cross-category price
+   * comparison is not the job here; the numbers under each row carry it.
+   */
+  const posIn = (r: { min: number; max: number }, v: number) =>
+    ((v - r.min) / Math.max(1, r.max - r.min)) * 100
 
   return (
     <>
@@ -125,13 +141,13 @@ export function Dumbbell({ rows, absentLabel }: {
               <span className="text-ink-faint">n={f.number(r.sampleSize)}</span>
             </div>
             <div className="relative h-4">
-              <span aria-hidden className="absolute top-1.5 h-1 rounded-full bg-sunken" style={{ left: `${pos(r.min)}%`, width: `${pos(r.max) - pos(r.min)}%` }} />
-              <span aria-hidden className="absolute top-0.5 h-3 w-0.5" style={{ left: `${pos(r.median)}%`, background: TOKENS.inkFaint }} />
+              <span aria-hidden className="absolute inset-x-0 top-1.5 h-1 rounded-full bg-sunken" />
+              <span aria-hidden className="absolute top-0.5 h-3 w-0.5" style={{ left: `${posIn(r, r.median)}%`, background: TOKENS.inkFaint }} />
               {r.mine !== null && (
                 <span
                   aria-hidden
                   className="absolute top-0 h-4 w-4 -translate-x-1/2 rounded-full border-2"
-                  style={{ left: `${pos(r.mine)}%`, background: seriesColour(0), borderColor: TOKENS.panel }}
+                  style={{ left: `${posIn(r, r.mine)}%`, background: seriesColour(0), borderColor: TOKENS.panel }}
                 />
               )}
             </div>

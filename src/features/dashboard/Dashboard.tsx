@@ -39,7 +39,7 @@ export function Dashboard({ userName }: { userName: string }) {
         description={t('dash.subtitle')}
       />
 
-      <SectionLabel>{t('dash.kpi.revenue')}</SectionLabel>
+      <SectionLabel>{t('dash.overview')}</SectionLabel>
       <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
           label={t('dash.kpi.revenue')}
@@ -82,6 +82,7 @@ export function Dashboard({ userName }: { userName: string }) {
               <AsyncBoundary query={report}>
                 {(r) => (
                   <Bullet
+                    lowerIsBetter
                     caption={t('dash.chart.sla')}
                     rows={[{
                       label: t('dash.kpi.fulfilment'),

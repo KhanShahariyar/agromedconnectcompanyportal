@@ -89,7 +89,7 @@ export const enUS = {
   'dash.kpi.fulfilment': 'Avg. fulfilment',
   'dash.days': '{n} days',
   'dash.chart.revenue': 'Revenue trend',
-  'dash.chart.revenue.sub': 'Last 12 weeks',
+  'dash.chart.revenue.sub': 'Last 12 months',
   'dash.chart.pipeline': 'Order pipeline',
   'dash.chart.pipeline.sub': 'Where orders are stuck right now',
   'dash.chart.sla': 'Fulfilment against target',
@@ -300,4 +300,5 @@ export const enUS = {
   'common.yes': 'Yes',
   'common.no': 'No',
   'common.notAvailable': 'Not available for your role.',
+  'dash.overview': 'Business overview',
 } as const

@@ -54,7 +54,7 @@ export function LineTrend({ data, xKey, yKey, name, height = 220, valueFormat }:
           <YAxis tick={AXIS} tickLine={false} axisLine={false} tickFormatter={f.tick} />
           <Tooltip content={<TooltipCard format={fmt} />} />
           {/* A single series needs no legend — the chart title names it. */}
-          <Line type="monotone" dataKey={yKey} name={name} stroke={seriesColour(0)} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+          <Line isAnimationActive={false} type="monotone" dataKey={yKey} name={name} stroke={seriesColour(0)} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
       <ChartTable caption={name} columns={[xKey, name]} rows={data.map((d) => [String(d[xKey]), fmt(Number(d[yKey]))])} />
@@ -84,7 +84,7 @@ export function StackedArea({ data, xKey, seriesKeys, height = 260, asPercent }:
           <Legend wrapperStyle={{ fontSize: 11, color: TOKENS.inkSoft }} />
           {seriesKeys.map((k, i) => (
             <Area
-              key={k} type="monotone" dataKey={k} name={k} stackId="1"
+              key={k} isAnimationActive={false} type="monotone" dataKey={k} name={k} stackId="1"
               stroke={seriesColour(i)} fill={seriesColour(i)} fillOpacity={0.85}
               // A 2px surface gap keeps stacked bands legible where two hues meet.
               strokeWidth={2} strokeLinejoin="round"
@@ -122,7 +122,7 @@ export function GroupedBar({ data, xKey, seriesKeys, height = 260, valueFormat }
           <Tooltip content={<TooltipCard format={fmt} />} cursor={{ fill: TOKENS.sunken, fillOpacity: 0.5 }} />
           <Legend wrapperStyle={{ fontSize: 11, color: TOKENS.inkSoft }} />
           {seriesKeys.map((k, i) => (
-            <Bar key={k} dataKey={k} name={k} fill={seriesColour(i)} radius={[4, 4, 0, 0]} />
+            <Bar key={k} isAnimationActive={false} dataKey={k} name={k} fill={seriesColour(i)} radius={[4, 4, 0, 0]} />
           ))}
         </BarChart>
       </ResponsiveContainer>
@@ -158,8 +158,8 @@ export function PriceScatter({ points, height = 300, xFormat }: {
           <Legend wrapperStyle={{ fontSize: 11, color: TOKENS.inkSoft }} />
           {/* The market cloud is recessive; my listings carry the ring so they
               are findable without relying on hue alone. */}
-          <Scatter name="Market" data={market} fill={SERIES_OTHER} fillOpacity={0.55} />
-          <Scatter name="My listings" data={mine} fill={seriesColour(0)} stroke={TOKENS.panel} strokeWidth={2} />
+          <Scatter isAnimationActive={false} name="Market" data={market} fill={SERIES_OTHER} fillOpacity={0.55} />
+          <Scatter isAnimationActive={false} name="My listings" data={mine} fill={seriesColour(0)} stroke={TOKENS.panel} strokeWidth={2} />
         </ScatterChart>
       </ResponsiveContainer>
       <ChartTable
@@ -184,7 +184,7 @@ export function Donut({ slices, height = 220, footnote }: {
     <>
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
-          <Pie data={slices} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="82%" paddingAngle={2} stroke={TOKENS.panel} strokeWidth={2}>
+          <Pie isAnimationActive={false} data={slices} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="82%" paddingAngle={2} stroke={TOKENS.panel} strokeWidth={2}>
             {slices.map((s, i) => <Cell key={s.label} fill={seriesColour(i)} />)}
           </Pie>
           <Tooltip content={<TooltipCard format={f.number} />} />
