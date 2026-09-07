@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { TOKENS } from './tokens'
+import { TOKENS, SERIES, SERIES_OTHER, STATUS } from './tokens'
 import { contrastRatio } from './contrast'
 
 describe('Olive Earth tokens', () => {
@@ -26,11 +26,30 @@ describe('Olive Earth tokens', () => {
     expect(contrastRatio(TOKENS.panel, TOKENS.base)).toBeLessThan(1.3)
   })
 
-  it('gives every chart series a distinguishable lightness so greyscale still separates them', () => {
-    const series = [TOKENS.series1, TOKENS.series2, TOKENS.series3, TOKENS.series4, TOKENS.series5, TOKENS.series6]
-    const lums = series.map((c) => contrastRatio(c, '#FFFFFF')).sort((a, b) => a - b)
-    for (let i = 1; i < lums.length; i++) {
-      expect(lums[i]! / lums[i - 1]!).toBeGreaterThan(1.15)
+  it('ships exactly the five validated series colours, in order', () => {
+    // Verified with the dataviz validator against surface #FDFBF4:
+    // lightness band, chroma floor, CVD separation, normal-vision floor and
+    // contrast all PASS. Changing any value here re-opens that question — re-run
+    // scripts/validate_palette.js before editing.
+    expect([...SERIES]).toEqual(['#00703A', '#1E97C4', '#D06810', '#BE2F6E', '#7A4CC0'])
+  })
+
+  it('caps categorical hues at five and gives overflow a neutral, not a sixth hue', () => {
+    // No sixth hue survives deuteranopia beside these five, so a 6th category
+    // folds into "Other" rather than getting a generated colour.
+    expect(SERIES).toHaveLength(5)
+    expect(SERIES_OTHER).not.toEqual(expect.stringMatching(new RegExp(SERIES.join('|'), 'i')))
+  })
+
+  it('keeps every series colour clear of the surface by at least 3:1', () => {
+    for (const c of SERIES) {
+      expect(contrastRatio(c, TOKENS.panel)).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('never reuses a status colour as a series hue', () => {
+    for (const status of Object.values(STATUS)) {
+      expect(SERIES as readonly string[]).not.toContain(status)
     }
   })
 })

@@ -25,27 +25,51 @@ export const TOKENS = {
   danger: '#A8321E',
   info: '#2F6B8F',
 
-  // Categorical series. Olive Earth is a single-hue family, so three greens
-  // cannot encode four series — these vary in lightness as well as hue so the
-  // set survives greyscale and the common colour-vision deficiencies.
-  series1: '#004B23',
-  series2: '#A7C957',
-  series3: '#B8752F',
-  series4: '#2F6B8F',
-  series5: '#7D3C5A',
-  series6: '#C9A227',
+  // Categorical series — VALIDATED, not chosen by eye.
+  //
+  //   node scripts/validate_palette.js \
+  //     "#00703A,#1E97C4,#D06810,#BE2F6E,#7A4CC0" --mode light --surface "#FDFBF4"
+  //
+  // The brand palette is not a series palette: #004B23 fell outside the
+  // lightness band and read grey on chroma, and #A7C957 failed contrast against
+  // the panel. These five sit inside the band, clear the chroma floor, keep
+  // >= 3:1 against the surface, and separate under deuteranopia and tritanopia.
+  //
+  // Five is the ceiling, not a preference. No sixth hue survives deuteranopia
+  // beside these — an olive sixth scored dE 1.2 against the orange, which is
+  // indistinguishable. A sixth category folds into `seriesOther` instead.
+  //
+  // All-pairs protan separation is dE 7.5, inside the 6–8 band that is legal
+  // only with secondary encoding — so every multi-series chart ships a legend,
+  // and <= 4 series are also direct-labelled.
+  series1: '#00703A',
+  series2: '#1E97C4',
+  series3: '#D06810',
+  series4: '#BE2F6E',
+  series5: '#7A4CC0',
+  seriesOther: '#8B8778',
 } as const satisfies Record<string, string>
 
 export type TokenName = keyof typeof TOKENS
 
+/** Assign in fixed order, never cycled. A 6th category becomes `SERIES_OTHER`. */
 export const SERIES = [
   TOKENS.series1,
   TOKENS.series2,
   TOKENS.series3,
   TOKENS.series4,
   TOKENS.series5,
-  TOKENS.series6,
 ] as const
+
+export const SERIES_OTHER = TOKENS.seriesOther
+
+/** Status colours are reserved and never reused as a series hue. */
+export const STATUS = {
+  success: TOKENS.success,
+  warning: TOKENS.warning,
+  danger: TOKENS.danger,
+  info: TOKENS.info,
+} as const
 
 /** Colours permitted as text on `base`. Enforced by tokens.test.ts. */
 export const TEXT_ON_BASE = [TOKENS.ink, TOKENS.inkSoft, TOKENS.primary] as const

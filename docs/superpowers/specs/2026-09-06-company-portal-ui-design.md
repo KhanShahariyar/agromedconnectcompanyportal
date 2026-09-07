@@ -239,25 +239,39 @@ Contracts follow the API's existing conventions, not invented ones:
 2. **`#F2E8CF` is a saturated cream, not a neutral.** Pure-white cards on it read as holes.
    Cards use `--panel` `#FDFBF4`, which is warm enough to belong and light enough to lift.
 
-### 6.3 Categorical chart colours
+### 6.3 Categorical chart colours — validated, not chosen
 
-Olive Earth is a single-hue family. Three greens cannot encode four series — a stacked area
-of five categories in green-only is unreadable. The chart palette therefore extends the
-family with earth-adjacent hues of **differing lightness as well as hue**, so it survives
-greyscale printing and the common forms of colour-vision deficiency:
+Olive Earth is a single-hue family, and **the brand palette is not a series
+palette.** Run through the colour validator against the panel surface `#FDFBF4`,
+the brand colours fail outright: `#004B23` sits below the lightness band *and*
+reads grey on chroma, and `#A7C957` falls under 3:1 contrast. A chart drawn in
+brand colours would be pretty and unreadable.
+
+The shipped series palette is therefore derived and machine-checked:
 
 ```
-series-1  #004B23   deep olive
-series-2  #A7C957   light lime
-series-3  #B8752F   clay
-series-4  #2F6B8F   slate blue
-series-5  #7D3C5A   plum
-series-6  #C9A227   wheat
+series-1  #00703A   green      series-4  #BE2F6E   magenta
+series-2  #1E97C4   blue       series-5  #7A4CC0   violet
+series-3  #D06810   orange     other     #8B8778   neutral
 ```
 
-Semantic colours stay separate from series colours so "green" never means both *series 1*
-and *success* on one screen: success `#3F7A34`, warning `#C77E23`, danger `#A8321E`,
-info `#2F6B8F`.
+All five clear the lightness band, the chroma floor, the ≥3:1 surface contrast,
+and separate under deuteranopia and tritanopia in shipping order.
+
+**Five is a ceiling, not a preference.** No sixth hue survives deuteranopia
+beside these — an olive sixth scored ΔE 1.2 against the orange, which is not a
+near miss but the same colour to a deuteranope. A sixth category folds into
+`other` in neutral grey; it never receives a generated hue.
+
+Two consequences that bind every chart:
+
+1. All-pairs protan separation is ΔE 7.5, inside the band that is legal **only
+   with secondary encoding**. So every multi-series chart carries a legend, and
+   charts of four series or fewer are also direct-labelled. Identity is never
+   colour alone.
+2. Status colours (success `#3F7A34`, warning `#C77E23`, danger `#A8321E`, info
+   `#2F6B8F`) are reserved. None is ever reused as a series hue, so "green" never
+   means both *series 1* and *healthy* on one screen.
 
 ### 6.4 Type
 
