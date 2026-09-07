@@ -124,3 +124,26 @@ describe('CompanyShell scroll safety', () => {
     expect(document.body.style.overflow).toBe('')
   })
 })
+
+describe('CompanyShell collapsed rail', () => {
+  it('shows icons only, with the label as a tooltip and an accessible name', async () => {
+    renderShell()
+    await userEvent.click(screen.getByRole('button', { name: /show or hide the menu/i }))
+
+    const links = screen.getAllByRole('link')
+    // Every nav link keeps a name for assistive tech even with the text gone.
+    for (const link of links) {
+      expect(link.getAttribute('aria-label')).toBeTruthy()
+      expect(link.getAttribute('title')).toBeTruthy()
+      expect(link.textContent?.trim()).toBe('')
+    }
+  })
+
+  it('restores the labels when expanded again', async () => {
+    renderShell()
+    const toggle = screen.getByRole('button', { name: /show or hide the menu/i })
+    await userEvent.click(toggle)
+    await userEvent.click(toggle)
+    expect(screen.getByRole('link', { name: 'Orders' })).toBeInTheDocument()
+  })
+})
