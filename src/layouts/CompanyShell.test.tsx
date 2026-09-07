@@ -104,3 +104,23 @@ describe('DeliveryShell', () => {
     expect(screen.getByRole('img', { name: /agromedconnect/i })).toHaveAttribute('width', '32')
   })
 })
+
+describe('CompanyShell scroll safety', () => {
+  it('never leaves overflow:hidden on the body after toggling the drawer', async () => {
+    // The bug this guards: the lock effect used to save the previous overflow
+    // value and restore it on cleanup. On the second toggle it captured its own
+    // 'hidden' and restored that forever, so the page stopped scrolling and
+    // stayed stopped. Toggling repeatedly must always end unlocked.
+    renderShell()
+    const toggle = screen.getByRole('button', { name: /show or hide the menu/i })
+    for (let i = 0; i < 4; i++) {
+      await userEvent.click(toggle)
+    }
+    expect(document.body.style.overflow).toBe('')
+  })
+
+  it('leaves the body unlocked on first render', () => {
+    renderShell()
+    expect(document.body.style.overflow).toBe('')
+  })
+})

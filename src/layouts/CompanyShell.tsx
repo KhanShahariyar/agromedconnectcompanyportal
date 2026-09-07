@@ -68,35 +68,72 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
   const [open, setOpen] = useState(() => isWide())
   const unverified = verificationStatus !== 'verified'
 
-  // Lock the page behind the overlay drawer only — never on desktop, where the
-  // rail sits in normal flow and the page must stay scrollable.
+  /*
+   * Lock the page behind the overlay drawer, and unlock it unconditionally.
+   *
+   * An earlier version saved the previous overflow value and restored that on
+   * cleanup. On the second toggle it captured its own 'hidden' and restored it
+   * forever, so the page stopped scrolling and stayed that way — the "stuck
+   * scrolling" this was meant to avoid. There is only ever one owner of this
+   * style, so clearing it outright is both simpler and correct.
+   */
   useEffect(() => {
     if (!open || isWide()) return
-    const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = previous }
+    return () => { document.body.style.overflow = '' }
   }, [open])
 
+  // Following the breakpoint keeps the rail open on a desktop and shut on a
+  // phone when the window is resized across it — and guarantees the lock is
+  // released on the way to a wide layout.
+  useEffect(() => {
+    const onResize = () => {
+      if (isWide()) {
+        document.body.style.overflow = ''
+        setOpen(true)
+      } else {
+        setOpen(false)
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   return (
+    /*
+     * The document scrolls. Not a pane.
+     *
+     * Two earlier attempts got this wrong in opposite directions. The first
+     * left `height: 100%` on html/body/#root, which pinned the page to the
+     * viewport so everything below the fold was unreachable. The second made
+     * the frame `h-screen overflow-hidden` with an inner scroll pane, which
+     * stopped the gap but clipped anything wider or taller than the frame.
+     *
+     * Letting the browser scroll the document is the one arrangement that
+     * cannot clip and cannot stick: the rail is sticky beside it, the header is
+     * sticky above it, and the content is free to be any size it likes.
+     */
     <div className="flex min-h-screen bg-base">
-      {open && <div className="fixed inset-0 z-30 bg-ink/30 lg:hidden" onClick={() => setOpen(false)} />}
+      {open && (
+        <div className="fixed inset-0 z-30 bg-ink/30 lg:hidden" onClick={() => setOpen(false)} />
+      )}
 
       <aside
         aria-hidden={!open}
-        className={`fixed top-0 z-40 flex h-screen w-[248px] shrink-0 transform flex-col overflow-hidden border-r border-line bg-panel transition-transform lg:sticky ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[248px] shrink-0 transform flex-col border-r border-line bg-panel transition-transform lg:sticky lg:top-0 lg:h-screen ${
           open ? 'translate-x-0' : '-translate-x-full lg:hidden'
         }`}
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-4">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Logo size={32} />
-            <div className="leading-tight">
-              <div className="font-serif text-sm text-ink">{t('app.name')}</div>
-              <div className="text-[10px] text-ink-faint">{t('app.portal')}</div>
+            <div className="min-w-0 leading-tight">
+              <div className="truncate font-serif text-sm text-ink">{t('app.name')}</div>
+              <div className="truncate text-[10px] text-ink-faint">{t('app.portal')}</div>
             </div>
           </div>
           <button
-            className="min-h-touch min-w-touch text-ink-soft"
+            className="min-h-touch min-w-touch shrink-0 text-ink-soft"
             onClick={() => setOpen(false)}
             aria-label={t('nav.closeMenu')}
           >
@@ -104,7 +141,9 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2.5 pt-4">
+        {/* The rail scrolls itself, so a long menu on a short screen stays
+            reachable instead of hiding under the account block. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-2.5 pt-4">
           <NavGroup items={COMPANY_NAV} />
           <NavGroup items={COMPANY_NAV_ACCOUNT} heading={t('nav.group.company')} />
           <NavGroup items={COMPANY_NAV_SUPPORT} heading={t('nav.group.support')} />
@@ -122,8 +161,10 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
         </div>
       </aside>
 
+      {/* min-w-0 lets this column shrink instead of forcing the page sideways
+          when a wide table or chart sits inside it. */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-base/90 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-base/95 px-4 backdrop-blur sm:px-6">
           <button
             className="min-h-touch min-w-touch text-ink-soft"
             onClick={() => setOpen((v) => !v)}
@@ -138,7 +179,7 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
         </header>
 
         {unverified && (
-          <div role="status" className="border-b border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-ink sm:px-6">
+          <div role="status" className="shrink-0 border-b border-warning/40 bg-warning/10 px-4 py-2.5 text-sm text-ink sm:px-6">
             {t('gate.unverified')}{' '}
             <NavLink to="/verification" className="font-medium text-primary underline">
               {t('nav.verification')}
@@ -146,7 +187,8 @@ export function CompanyShell({ organisationName, userName, verificationStatus, o
           </div>
         )}
 
-        <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6">{children}</main>
+        {/* Fills whatever width the screen gives it — no fixed cap. */}
+        <main className="w-full min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   )

@@ -23,13 +23,14 @@
 }
 
 /*
- * min-height, never height.
+ * No height rule on the root chain at all.
  *
- * `height: 100%` pinned html, body and #root to exactly the viewport while the
- * page was taller, so everything below the fold became unreachable — the page
- * simply would not scroll.
+ * `height: 100%` pinned the page to the viewport and made everything below the
+ * fold unreachable. `min-height: 100%` fixed that but left a percentage chain
+ * that resolved against an auto-height parent and produced a phantom 72px of
+ * scroll into blank space. The shells declare their own `min-h-screen`, which
+ * is all that was ever needed.
  */
-html, body, #root { min-height: 100%; }
 
 body {
   margin: 0;
