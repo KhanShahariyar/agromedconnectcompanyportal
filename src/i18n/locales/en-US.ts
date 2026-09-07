@@ -301,4 +301,8 @@ export const enUS = {
   'common.no': 'No',
   'common.notAvailable': 'Not available for your role.',
   'dash.overview': 'Business overview',
+  'assign.assigned': 'Assigned',
+  'assign.picked_up': 'Picked up',
+  'assign.delivered': 'Delivered',
+  'assign.failed': 'Failed',
 } as const

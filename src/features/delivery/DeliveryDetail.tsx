@@ -23,10 +23,10 @@ export function DeliveryDetail() {
       {(a) => {
         const hasPin = a.location.precision === 'exact' && a.location.lat !== null && a.location.lng !== null
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-28">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-ink-faint">{a.orderNumber}</span>
-              <Badge tone={a.status === 'delivered' ? 'success' : 'info'}>{a.status}</Badge>
+              <Badge tone={a.status === 'delivered' ? 'success' : 'info'}>{t(`assign.${a.status}` as never)}</Badge>
             </div>
 
             {hasPin ? (

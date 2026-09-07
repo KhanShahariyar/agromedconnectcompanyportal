@@ -8,6 +8,16 @@ import type { Column } from '@/ui'
 import { Gate } from '@/access/Gate'
 import { currentIndex, isAwaitingPlatform, mayChoosePath, stepsFor } from './machine'
 import type { DeliveryMode, OrderLine, OrderDetail as Detail } from '@/data/contracts'
+import { ORDER_STATUSES } from '@/data/contracts'
+import type { Translate } from '@/i18n/LocaleProvider'
+
+const FULFILMENT_STEPS = ['confirmed', 'processing', 'dispatched', 'assigned', 'handed_to_platform', 'delivered']
+
+function statusLabel(t: Translate, value: string): string {
+  if ((ORDER_STATUSES as readonly string[]).includes(value)) return t(`order.status.${value}` as never)
+  if (FULFILMENT_STEPS.includes(value)) return t(`step.${value}` as never)
+  return value
+}
 
 export function OrderDetail({ deliveryMode }: { deliveryMode: DeliveryMode }) {
   const t = useT()
@@ -71,7 +81,10 @@ export function OrderDetail({ deliveryMode }: { deliveryMode: DeliveryMode }) {
                   <ol className="space-y-2">
                     {o.history.map((h) => (
                       <li key={h.id} data-testid="history-row" className="flex flex-wrap gap-2 text-sm">
-                        <span className="text-ink">{h.toStatus}</span>
+                        {/* C3 — the value is the contract, the label is i18n.
+                            History mixes order statuses and shipment steps, so
+                            fall through both key spaces before giving up. */}
+                        <span className="text-ink">{statusLabel(t, h.toStatus)}</span>
                         <span className="text-ink-faint">{h.changedBy}</span>
                         <span className="ml-auto text-ink-soft">{f.dateTime(h.occurredAt)}</span>
                       </li>

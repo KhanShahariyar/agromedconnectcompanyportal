@@ -297,4 +297,8 @@ export const bnBD = {
   'common.no': 'না',
   'common.notAvailable': 'আপনার ভূমিকার জন্য উপলব্ধ নয়।',
   'dash.overview': 'ব্যবসার সারসংক্ষেপ',
+  'assign.assigned': 'নির্ধারিত',
+  'assign.picked_up': 'সংগ্রহ করা হয়েছে',
+  'assign.delivered': 'সরবরাহকৃত',
+  'assign.failed': 'ব্যর্থ',
 } as const
