@@ -89,6 +89,14 @@ export class HttpAdapter implements DataAdapter {
   /** The server renders money and dates, so it has to be told which language. */
   setLocale(locale: string) { this.locale = locale }
 
+  /**
+   * Endpoints where a 401 means "those credentials are wrong", not "your
+   * session ended". Signing in is not a session that expired.
+   */
+  private static isAuthAttempt(path: string) {
+    return path.startsWith('/api/v1/auth/')
+  }
+
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -110,7 +118,12 @@ export class HttpAdapter implements DataAdapter {
         'Check your connection and try again.')
     }
 
-    if (response.status === 401) {
+    // A 401 anywhere else means the token died mid-session, and the shell
+    // should sign the user out. A 401 from the sign-in call itself means the
+    // password was wrong, and replacing that with "please sign in again" tells
+    // someone who is already signing in precisely nothing — which is what it
+    // did, and why a wrong password looked like a broken portal.
+    if (response.status === 401 && !HttpAdapter.isAuthAttempt(path)) {
       this.onUnauthorised?.()
       throw problem('unauthenticated', 'Your session has ended', 401, 'Please sign in again.')
     }
