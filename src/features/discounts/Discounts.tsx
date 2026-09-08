@@ -34,8 +34,11 @@ export function Discounts() {
     focus?.scope.kind === 'listing'
       ? focus.scope.listingIds[0]
       : listings.data?.items.find((l) => l.categoryId === (focus?.scope.kind === 'category' ? focus.scope.categoryId : ''))?.id
-  const margin = useQuery(['margin', focusListing ?? '', focusId ?? ''], () =>
-    api.getMarginBreakdown(focusListing ?? listings.data?.items[0]?.id ?? 'lst-01', focusId))
+  // No hard-coded fallback id. There was one, and against real data it asked
+  // the API to price a listing that does not exist and came back 400.
+  const marginListing = focusListing ?? listings.data?.items[0]?.id ?? null
+  const margin = useQuery(['margin', marginListing ?? '', focusId ?? ''], async () =>
+    marginListing ? api.getMarginBreakdown(marginListing, focusId) : undefined)
 
   const { rows, conflicts } = useMemo(() => {
     const ds = discounts.data?.items ?? []
@@ -121,7 +124,7 @@ export function Discounts() {
 
           <ChartFrame title={t('discounts.margin')} subtitle={focus ? focus.name : t('discounts.margin.sub')} encoding="waterfall">
             <AsyncBoundary query={margin}>
-              {(m) => (
+              {(m) => !m ? null : (
                 <Waterfall
                   caption={t('discounts.margin')}
                   format={(minor) => f.money({ amountMinor: minor, currency: 'BDT', display: '' })}

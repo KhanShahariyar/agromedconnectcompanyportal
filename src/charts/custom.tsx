@@ -24,10 +24,12 @@ export function Bullet({ rows, caption, lowerIsBetter = false }: {
   return (
     <>
       <ul className="space-y-3">
-        {rows.map((r) => {
+        {rows.map((r, index) => {
           const short = lowerIsBetter ? r.value > r.target : r.value < r.target
           return (
-            <li key={r.label}>
+            // Keyed by position as well as label: two rows can legitimately
+            // share a name, and React silently drops the second if they collide.
+            <li key={`${r.label}-${index}`}>
               <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
                 <span className="truncate text-ink">{r.label}</span>
                 <span className={short ? 'font-medium text-danger' : 'text-ink-soft'}>

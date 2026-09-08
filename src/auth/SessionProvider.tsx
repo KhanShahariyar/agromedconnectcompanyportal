@@ -60,9 +60,14 @@ export function SessionProvider({ children, initial }: { children: ReactNode; in
   }, [api])
 
   const access = useMemo<AccessContext>(() => ({
-    permissions: session ? ROLE_PERMISSIONS[session.role] : [],
-    verificationStatus: session?.organisation.verificationStatus ?? 'unverified',
-    isBlacklisted: session?.organisation.isBlacklisted ?? false,
+    // Prefer the server's permission list. It already folds in per-member
+    // grants and denials, which a role name alone cannot express. The local
+    // role map is the fallback for the mock adapter, which has no server.
+    permissions: session
+      ? (session.permissions.length > 0 ? session.permissions : ROLE_PERMISSIONS[session.role])
+      : [],
+    verificationStatus: session?.organisation?.verificationStatus ?? 'unverified',
+    isBlacklisted: session?.organisation?.isBlacklisted ?? false,
   }), [session])
 
   const value = useMemo(

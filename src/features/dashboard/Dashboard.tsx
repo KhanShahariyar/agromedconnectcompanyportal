@@ -7,6 +7,18 @@ import { AsyncBoundary, Card, PageHeader, SectionLabel, StatTile } from '@/ui'
 import { ChartFrame, ChartScreen, Bullet, Funnel, LineTrend } from '@/charts'
 import type { OrderStatus } from '@/data/contracts'
 
+/**
+ * Honorifics that are part of the written name in Bangladesh and are not what
+ * anyone is called. Taking the first word of "Md. Rahim Uddin" greets the user
+ * as "Md.", which is nobody's name.
+ */
+const HONORIFICS = new Set(['md.', 'md', 'mst.', 'mst', 'mr.', 'mr', 'mrs.', 'mrs', 'ms.', 'ms', 'dr.', 'dr'])
+
+export function givenName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter((p) => !HONORIFICS.has(p.toLowerCase()))
+  return parts[0] ?? fullName
+}
+
 /** The four stages worth watching. Terminal states are not "stuck". */
 const PIPELINE: OrderStatus[] = ['confirmed', 'processing', 'shipped', 'delivered']
 
@@ -35,7 +47,7 @@ export function Dashboard({ userName }: { userName: string }) {
   return (
     <div>
       <PageHeader
-        title={t('dash.greeting', { name: userName.split(' ')[0] ?? userName })}
+        title={t('dash.greeting', { name: givenName(userName) })}
         description={t('dash.subtitle')}
       />
 
