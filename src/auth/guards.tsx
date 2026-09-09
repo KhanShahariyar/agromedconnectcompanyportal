@@ -4,8 +4,21 @@ import { useSession, RETURN_TO_KEY } from './SessionProvider'
 
 /** Sends an unauthenticated visitor to sign-in, remembering where they meant to go. */
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { session } = useSession()
+  const { session, restoring } = useSession()
   const location = useLocation()
+
+  // On first paint the answer is genuinely unknown -- the refresh cookie is
+  // still being redeemed. Redirecting now would bounce a signed-in user to the
+  // sign-in screen for a moment on every single load, which reads as a bug and
+  // loses the route they asked for.
+  if (restoring) {
+    return (
+      <div className="grid min-h-screen place-items-center text-sm text-ink-faint" role="status">
+        <span className="sr-only">Restoring your session</span>
+        <span aria-hidden>·  ·  ·</span>
+      </div>
+    )
+  }
 
   if (!session) {
     try {

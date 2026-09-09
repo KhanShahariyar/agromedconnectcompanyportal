@@ -1,16 +1,28 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useData } from '@/data/DataProvider'
 import { ROLE_PERMISSIONS } from '@/access/can'
 import type { AccessContext } from '@/access/can'
 import type { ApiProblem, Session } from '@/data/contracts'
 
-const REFRESH_KEY = 'agromed.refresh'
 export const RETURN_TO_KEY = 'agromed.returnTo'
+
+/**
+ * The key this used to write a refresh token to, kept only so it can be erased.
+ *
+ * Removing the code that writes a secret does not remove the secret. Anyone who
+ * signed in before the cookie existed still has a live thirty-day refresh token
+ * in their browser's session storage, readable by any injected script -- which
+ * is the whole reason it moved. So the first load after this change deletes it,
+ * and this constant can go once no session predates the cookie.
+ */
+const LEGACY_REFRESH_KEY = 'agromed.refresh'
 
 interface SessionContextValue {
   session: Session | null
   loading: boolean
+  /** True on first paint, while the refresh cookie is being redeemed. */
+  restoring: boolean
   error?: ApiProblem
   signIn: (identifier: string, password: string) => Promise<void>
   signOut: () => void
@@ -26,19 +38,51 @@ export function SessionProvider({ children, initial }: { children: ReactNode; in
   const [session, setSessionState] = useState<Session | null>(initial ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ApiProblem | undefined>()
+  // Only meaningful when there is a server to ask; the mock adapter has nothing
+  // to restore from and must not hold the UI on a promise that never resolves.
+  const [restoring, setRestoring] = useState(!initial && !!useData().restoreSession)
   const api = useData()
 
+  /**
+   * The access token lives in memory and the refresh token in an HttpOnly
+   * cookie the portal cannot read.
+   *
+   * That cookie is what replaced the sessionStorage write this used to do. The
+   * comment here called it Phase 2 debt and it was right to: a stored refresh
+   * token is reachable by any injected script, and it is the long-lived half of
+   * the credential — losing it is much worse than losing a fifteen-minute
+   * access token. The API sets the cookie now, so the debt is paid rather than
+   * documented.
+   */
   const setSession = useCallback((s: Session) => {
     setSessionState(s)
-    try {
-      // PHASE 2 DEBT: this belongs in an httpOnly cookie. Until the API sets
-      // one, a stored refresh token is XSS-reachable. Writing the compromise
-      // down beats discovering it later.
-      sessionStorage.setItem(REFRESH_KEY, s.refreshToken)
-    } catch {
-      /* private browsing — the session simply does not survive a reload */
-    }
   }, [])
+
+  /**
+   * Redeems the refresh cookie once, on load.
+   *
+   * Without it the portal dropped its session on every reload — and on a
+   * middle-click into a new tab — leaving the user at the sign-in screen with
+   * their work behind them. There was no rotation either, so a session simply
+   * stopped working after fifteen minutes and every screen started failing at
+   * once.
+   */
+  // Clear the pre-cookie leftovers before anything else touches storage.
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(LEGACY_REFRESH_KEY)
+      localStorage.removeItem(LEGACY_REFRESH_KEY)
+    } catch { /* private browsing: nothing was stored to begin with */ }
+  }, [])
+
+  useEffect(() => {
+    if (!api.restoreSession) return
+    let cancelled = false
+    api.restoreSession()
+      .then((s) => { if (!cancelled && s) setSessionState(s) })
+      .finally(() => { if (!cancelled) setRestoring(false) })
+    return () => { cancelled = true }
+  }, [api])
 
   const signIn = useCallback(async (identifier: string, password: string) => {
     setLoading(true)
@@ -55,7 +99,7 @@ export function SessionProvider({ children, initial }: { children: ReactNode; in
 
   const signOut = useCallback(() => {
     setSessionState(null)
-    try { sessionStorage.removeItem(REFRESH_KEY) } catch { /* nothing to clear */ }
+    // The server clears the cookie; there is nothing left here to clear.
     void api.logout()
   }, [api])
 
@@ -71,8 +115,8 @@ export function SessionProvider({ children, initial }: { children: ReactNode; in
   }), [session])
 
   const value = useMemo(
-    () => ({ session, loading, error, signIn, signOut, setSession, access }),
-    [session, loading, error, signIn, signOut, setSession, access],
+    () => ({ session, loading, restoring, error, signIn, signOut, setSession, access }),
+    [session, loading, restoring, error, signIn, signOut, setSession, access],
   )
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>
 }

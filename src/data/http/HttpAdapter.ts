@@ -72,6 +72,17 @@ export class HttpAdapter implements DataAdapter {
   private locale = 'bn-BD'
 
   /**
+   * The in-flight rotation, so concurrent 401s share one refresh.
+   *
+   * A dashboard fires half a dozen requests at once. Without this, an expired
+   * token means six simultaneous rotations — and refresh tokens are single-use,
+   * so five of them present an already-rotated token, the server reads that as
+   * a replayed credential exactly as it should, and revokes the whole family.
+   * The user is signed out of everywhere for the crime of loading a page.
+   */
+  private inFlightRefresh: Promise<boolean> | null = null
+
+  /**
    * Cursors seen per query, indexed by page number. Page 1 needs none, so
    * index 0 stays empty; page N uses the cursor returned with page N-1.
    * Stepping one screen at a time is what the UI offers, and that is what this
@@ -97,6 +108,72 @@ export class HttpAdapter implements DataAdapter {
     return path.startsWith('/api/v1/auth/')
   }
 
+  /**
+   * Rotates the access token using the refresh cookie the API sets at sign-in.
+   *
+   * The portal never sees that cookie: it is HttpOnly, so script cannot read it
+   * and an XSS hole cannot steal it. The browser attaches it to /api/v1/auth
+   * calls on its own, which is why every request here sends credentials.
+   *
+   * Returns false rather than throwing when the session is genuinely over —
+   * the caller then reports the original 401, which is what the shell already
+   * knows how to handle.
+   */
+  private async refresh(): Promise<boolean> {
+    if (this.inFlightRefresh) return this.inFlightRefresh
+
+    const run = async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/api/v1/auth/token/refresh`, {
+          method: 'POST',
+          body: '{}',
+          headers: { 'Content-Type': 'application/json', 'X-AgroMed-Client': 'web' },
+          credentials: 'include',
+        })
+        if (!response.ok) return false
+        const raw = (await response.json()) as ApiLoginResponse
+        this.setAccessToken(raw.accessToken)
+        return true
+      } catch {
+        // A network failure is not proof the session is dead, so the token is
+        // left alone and the caller surfaces a transient error instead.
+        return false
+      }
+    }
+
+    this.inFlightRefresh = run().finally(() => { this.inFlightRefresh = null })
+    return this.inFlightRefresh
+  }
+
+  /**
+   * Restores a session on page load, from the refresh cookie alone.
+   *
+   * Before this the portal kept its access token in memory and nothing else, so
+   * a reload — or a middle-click into a new tab — dropped the user at the sign-in
+   * screen with their work behind them. There was also no rotation at all, so a
+   * session simply stopped working after fifteen minutes and every screen began
+   * failing at once.
+   */
+  async restoreSession(): Promise<Session | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/auth/token/refresh`, {
+        method: 'POST',
+        body: '{}',
+        headers: { 'Content-Type': 'application/json', 'X-AgroMed-Client': 'web' },
+        credentials: 'include',
+      })
+      if (!response.ok) return null
+      const raw = (await response.json()) as ApiLoginResponse
+      this.setAccessToken(raw.accessToken)
+      // Composed the same way a fresh sign-in is, so a restored session is
+      // indistinguishable from one the user just created -- including the
+      // organisation record the shell needs before its first paint.
+      return await this.toSession(raw)
+    } catch {
+      return null
+    }
+  }
+
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -110,6 +187,10 @@ export class HttpAdapter implements DataAdapter {
       response = await fetch(`${this.baseUrl}${path}`, {
         method, headers,
         body: body === undefined ? undefined : JSON.stringify(body),
+        // So the browser attaches the HttpOnly refresh cookie to the auth calls.
+        // The API scopes that cookie to /api/v1/auth, so no other endpoint
+        // actually receives one.
+        credentials: 'include',
       })
     } catch {
       // A dead network is not a 500. Saying so lets the error state offer
@@ -124,8 +205,29 @@ export class HttpAdapter implements DataAdapter {
     // someone who is already signing in precisely nothing — which is what it
     // did, and why a wrong password looked like a broken portal.
     if (response.status === 401 && !HttpAdapter.isAuthAttempt(path)) {
-      this.onUnauthorised?.()
-      throw problem('unauthenticated', 'Your session has ended', 401, 'Please sign in again.')
+      // One rotation, then one retry. A token can be rejected while still
+      // looking current — a revoked membership, a rotated signing key, a clock
+      // that drifted — and retrying once turns that into a blip the user never
+      // sees. Retrying more than once turns a session that is genuinely over
+      // into a loop.
+      if (await this.refresh()) {
+        try {
+          response = await fetch(`${this.baseUrl}${path}`, {
+            method,
+            headers: { ...headers, Authorization: `Bearer ${this.accessToken}` },
+            body: body === undefined ? undefined : JSON.stringify(body),
+            credentials: 'include',
+          })
+        } catch {
+          throw problem('network_unreachable', 'Could not reach the server', 0,
+            'Check your connection and try again.')
+        }
+      }
+
+      if (response.status === 401) {
+        this.onUnauthorised?.()
+        throw problem('unauthenticated', 'Your session has ended', 401, 'Please sign in again.')
+      }
     }
 
     if (response.status === 204) return undefined as T

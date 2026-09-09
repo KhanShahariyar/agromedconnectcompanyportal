@@ -22,6 +22,14 @@ import type {
 export interface DataAdapter {
   // ---- auth
   login(identifier: string, password: string): Promise<Session>
+
+  /**
+   * Rebuilds a session on page load from whatever the adapter persisted.
+   *
+   * Optional because the mock adapter has no server to ask and nothing to
+   * restore from. The HTTP adapter redeems the HttpOnly refresh cookie.
+   */
+  restoreSession?(): Promise<Session | null>
   register(input: RegisterCompanyInput): Promise<Session>
   forgotPassword(identifier: string): Promise<void>
   resetPassword(token: string, password: string): Promise<void>
