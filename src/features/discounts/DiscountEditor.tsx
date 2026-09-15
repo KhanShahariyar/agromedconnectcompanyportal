@@ -91,10 +91,6 @@ export function DiscountEditor() {
     stackGroup: value.stackGroup.trim() || null,
   }), [value, id, isNew])
 
-  /**
-   * Clashes are checked as the form changes, not on save. Finding out that two
-   * discounts fight only after publishing is how a customer discovers it first.
-   */
   useEffect(() => {
     let cancelled = false
     const timer = setTimeout(() => {
@@ -224,9 +220,9 @@ export function DiscountEditor() {
                   <ul className="space-y-1.5 rounded-card border border-warning/40 bg-warning/10 p-3 text-sm">
                     {conflicts.map((c, i) => (
                       <li key={i} role={c.resolution === 'ambiguous' ? 'alert' : undefined} className="text-ink-soft">
-                        {/* Naming the counterpart is what makes the warning
-                            actionable — "these overlap" alone leaves the user
-                            hunting through their own discount list. */}
+                        {
+
+}
                         <span className="text-ink">{t('editor.clashesWith', { name: nameOfOther(c) })}</span>
                         {' — '}
                         {t(`discount.conflict.${c.resolution === 'ambiguous' ? 'ambiguous' : c.resolution === 'stacked' ? 'stacked' : 'priority'}` as never)}
@@ -240,8 +236,8 @@ export function DiscountEditor() {
 
               <div className="flex items-center gap-2">
                 <Gate action="discount.manage">
-                  {/* Only ambiguity blocks: stacking and priority are decisions
-                      already made, not mistakes. */}
+                  {
+}
                   <Button type="submit" loading={busy} disabled={blocking.length > 0}>{t('action.save')}</Button>
                 </Gate>
                 <Button type="button" variant="secondary" onClick={() => navigate('/discounts')}>{t('action.cancel')}</Button>

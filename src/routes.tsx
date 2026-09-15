@@ -8,6 +8,7 @@ import { CompanyShell } from '@/layouts/CompanyShell'
 import { DeliveryShell } from '@/layouts/DeliveryShell'
 import { useT } from '@/i18n/LocaleProvider'
 import { Card, Skeleton } from '@/ui'
+import { PushBridge } from '@/push/PushBridge'
 
 import { Login } from '@/features/auth/Login'
 import { RegisterCompany } from '@/features/auth/RegisterCompany'
@@ -29,13 +30,6 @@ import {
 } from '@/features/misc/Simple'
 import { MyDeliveries } from '@/features/delivery/MyDeliveries'
 
-/**
- * Chart- and map-heavy screens load on demand.
- *
- * Without this the courier's phone downloads the whole of Recharts to read a
- * run sheet, on mobile data, at a gate. Leaflet and Recharts land in separate
- * chunks so neither shell pays for the other's dependency.
- */
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
 const MarketIntelligence = lazy(() => import('@/features/market/MarketIntelligence').then((m) => ({ default: m.MarketIntelligence })))
 const Inventory = lazy(() => import('@/features/inventory/Inventory').then((m) => ({ default: m.Inventory })))
@@ -54,7 +48,6 @@ function NotFound() {
   )
 }
 
-/** Shell is chosen by role at the route level (D2), not inside each screen. */
 function Shell() {
   const { session, signOut } = useSession()
   if (!session) return null
@@ -90,6 +83,7 @@ function Shell() {
         verificationStatus={session.organisation.verificationStatus}
         onSignOut={signOut}
       >
+        <PushBridge />
         <RequireCompanyRole>
           <Suspense fallback={<Skeleton rows={6} />}>
           <Routes>

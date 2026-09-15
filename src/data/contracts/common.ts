@@ -1,20 +1,15 @@
-/**
- * Shared primitives. This folder imports no runtime code — it is the artefact
- * Phase 2 implements against, and it must stay readable as a contract.
- */
+
 
 export type Uuid = string
 export type IsoDateTime = string
 export type IsoDate = string
 
-/** C2 — never a bare number. `display` is server-rendered and authoritative. */
 export interface Money {
   amountMinor: number
   currency: 'BDT'
   display: string
 }
 
-/** C10 — every list is paginated from the first mock. */
 export interface Page<T> {
   items: T[]
   page: number
@@ -29,7 +24,6 @@ export interface PageQuery {
   sort?: string
 }
 
-/** RFC 9457 problem document, as the API already emits. */
 export interface ApiProblem {
   type: string
   title: string
@@ -42,15 +36,9 @@ export interface ApiProblem {
 export const VERIFICATION_STATUSES = ['unverified', 'pending', 'verified', 'rejected', 'expired'] as const
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]
 
-/** G6/C14 — assigned by the platform super admin, never by the company. */
 export const DELIVERY_MODES = ['own', 'partner', 'both'] as const
 export type DeliveryMode = (typeof DELIVERY_MODES)[number]
 
-/**
- * D3/R1 — coordinates are captured at checkout by the Flutter farmer app.
- * Until that ships, `precision: 'none'` is the normal case, so every consumer
- * must render an honest address-only state rather than a misleading pin.
- */
 export interface GeoPoint {
   lat: number | null
   lng: number | null

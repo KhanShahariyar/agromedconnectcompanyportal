@@ -40,8 +40,7 @@ export function RegisterCompany() {
     setBusy(true)
     try {
       setSession(await api.register({ ...form, contactPhone: normalisePhone(form.contactPhone) }))
-      // Registration ends on the verification checklist, not the dashboard —
-      // there is nothing useful to do until documents are submitted.
+
       navigate('/verification', { replace: true })
     } catch (err) {
       setFailure(err as ApiProblem)

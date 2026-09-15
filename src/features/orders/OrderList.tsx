@@ -34,7 +34,7 @@ export function OrderList() {
   return (
     <div>
       <PageHeader title={t('orders.title')} description={t('orders.subtitle')} />
-      {/* No charts here — the job is finding one order, and a chart would be vanity. */}
+      { }
       <div className="mb-4">
         <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(1) }} />
       </div>

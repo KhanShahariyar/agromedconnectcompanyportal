@@ -2,21 +2,10 @@ import { useFormat } from '@/i18n/LocaleProvider'
 import { SERIES, SERIES_OTHER, STATUS, TOKENS, seriesColour } from '@/design/tokens'
 import { ChartTable } from './ChartFrame'
 
-/* --------------------------------------------------------------- Bullet */
-
-/**
- * Actual against a threshold. Chosen over a bar because the question is not
- * "how much stock" but "is it below the reorder point" — a comparison a bar
- * cannot make without the reader doing arithmetic.
- */
 export function Bullet({ rows, caption, lowerIsBetter = false }: {
   rows: { label: string; value: number; target: number; unit?: string | null }[]
   caption: string
-  /**
-   * Whether falling below the threshold is the good outcome. Stock below its
-   * reorder point is a problem; fulfilment days below target is the goal. The
-   * same mark means opposite things, so the caller must say which.
-   */
+
   lowerIsBetter?: boolean
 }) {
   const f = useFormat()
@@ -27,8 +16,7 @@ export function Bullet({ rows, caption, lowerIsBetter = false }: {
         {rows.map((r, index) => {
           const short = lowerIsBetter ? r.value > r.target : r.value < r.target
           return (
-            // Keyed by position as well as label: two rows can legitimately
-            // share a name, and React silently drops the second if they collide.
+
             <li key={`${r.label}-${index}`}>
               <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
                 <span className="truncate text-ink">{r.label}</span>
@@ -42,7 +30,7 @@ export function Bullet({ rows, caption, lowerIsBetter = false }: {
                   className="h-3 rounded-sm"
                   style={{ width: `${(r.value / max) * 100}%`, background: short ? STATUS.danger : seriesColour(0) }}
                 />
-                {/* The threshold is a tick, not a second bar — one measure, one mark. */}
+                { }
                 <span
                   aria-hidden
                   className="absolute top-[-3px] h-[18px] w-0.5"
@@ -65,9 +53,6 @@ export function Bullet({ rows, caption, lowerIsBetter = false }: {
   )
 }
 
-/* --------------------------------------------------------------- Funnel */
-
-/** Stage-to-stage drop-off. The width carries the count; the label carries the loss. */
 export function Funnel({ stages, onSelect }: {
   stages: { key: string; label: string; count: number }[]
   onSelect?: (key: string) => void
@@ -111,25 +96,12 @@ export function Funnel({ stages, onSelect }: {
   )
 }
 
-/* ------------------------------------------------------------- Dumbbell */
-
-/**
- * My price against the market's min–median–max. A range plot rather than bars
- * because the question is positional: am I inside the market, and where.
- */
 export function Dumbbell({ rows, absentLabel }: {
   rows: { label: string; min: number; median: number; max: number; mine: number | null; sampleSize: number }[]
   absentLabel: string
 }) {
   const f = useFormat()
 
-  /*
-   * Each row is scaled to its own market range, not to a scale shared across
-   * categories. Shared, a category spanning 400-1000 collapsed into a sliver
-   * beside one spanning 2000-8000, and "where do I sit in this category" — the
-   * only question this chart answers — became unreadable. Cross-category price
-   * comparison is not the job here; the numbers under each row carry it.
-   */
   const posIn = (r: { min: number; max: number }, v: number) =>
     ((v - r.min) / Math.max(1, r.max - r.min)) * 100
 
@@ -170,13 +142,10 @@ export function Dumbbell({ rows, absentLabel }: {
   )
 }
 
-/* ------------------------------------------------------------ Waterfall */
-
-/** List price → discount → commission → net. Makes a margin-erasing discount visible before saving. */
 export function Waterfall({ steps, caption, format }: {
   steps: { label: string; delta: number; isTotal?: boolean }[]
   caption: string
-  /** Minor units in, display string out. A bare number here reads as a count. */
+
   format?: (minor: number) => string
 }) {
   const f = useFormat()
@@ -218,8 +187,6 @@ export function Waterfall({ steps, caption, format }: {
   )
 }
 
-/* -------------------------------------------------------- GanttTimeline */
-
 export interface DiscountBar {
   id: string
   label: string
@@ -234,17 +201,6 @@ export interface DiscountRow {
   bars: DiscountBar[]
 }
 
-/**
- * The highest-value chart in the portal.
- *
- * pricing.offer lets two discounts cover the same product over the same dates.
- * A list hides that; a timeline makes an accidental overlap something you see.
- *
- * An earlier version stacked the bars inside a single 28px row, which read as a
- * broken progress bar rather than a schedule. Each discount now gets its own
- * labelled line under its product, so an overlap is visible as two bars sitting
- * above one another, with the shared span shaded and named.
- */
 export function GanttTimeline({ rows, from, to, onSelect }: {
   rows: DiscountRow[]
   from: string
@@ -261,7 +217,6 @@ export function GanttTimeline({ rows, from, to, onSelect }: {
   const now = Date.now()
   const nowPct = now >= t0 && now <= t1 ? pct(now) : null
 
-  // Month boundaries give the eye something to measure against.
   const ticks: { at: number; label: string }[] = []
   const cursor = new Date(t0)
   cursor.setDate(1)
@@ -271,7 +226,6 @@ export function GanttTimeline({ rows, from, to, onSelect }: {
     cursor.setMonth(cursor.getMonth() + 1)
   }
 
-  /** Where two or more bars in a row cover the same days. */
   function overlapsFor(bars: DiscountBar[]): { left: number; width: number }[] {
     const spans = bars.map((b) => ({
       s: new Date(b.start).getTime(),
@@ -314,12 +268,12 @@ export function GanttTimeline({ rows, from, to, onSelect }: {
               </div>
 
               <div className="relative">
-                {/* Month gridlines behind everything. */}
+                { }
                 {ticks.map((tick) => (
                   <span key={`g-${tick.label}`} aria-hidden className="absolute top-0 h-full w-px bg-line"
                         style={{ left: `${tick.at}%` }} />
                 ))}
-                {/* The shared span, named by the badge above. */}
+                { }
                 {overlaps.map((o, i) => (
                   <span key={`o-${i}`} aria-hidden className="absolute top-0 h-full rounded-sm bg-warning/15"
                         style={{ left: `${o.left}%`, width: `${o.width}%` }} />
@@ -382,8 +336,6 @@ export function GanttTimeline({ rows, from, to, onSelect }: {
   )
 }
 
-/* -------------------------------------------------------- CohortHeatmap */
-
 export function CohortHeatmap({ cohorts, caption }: {
   cohorts: { cohortMonth: string; cells: { monthsSince: number; rate: number; buyers: number }[] }[]
   caption: string
@@ -412,10 +364,10 @@ export function CohortHeatmap({ cohorts, caption }: {
                   return (
                     <td
                       key={i}
-                      // Sequential: one hue, light to dark. Never a rainbow.
+
                       style={{ background: seriesColour(0), opacity: 0.15 + cell.rate * 0.85 }}
                       className="rounded-sm px-2 py-1 text-center text-ink"
-                      // A 100% cell of one buyer is noise, so the count travels with the rate.
+
                       title={`${f.percent(cell.rate, 0)} of ${f.number(cell.buyers)} buyers`}
                     >
                       <span className="mix-blend-luminosity">{f.percent(cell.rate, 0)}</span>

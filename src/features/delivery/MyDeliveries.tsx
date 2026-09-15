@@ -20,7 +20,7 @@ export function MyDeliveries({ status = 'active' }: { status?: 'active' | 'compl
           <ul className="space-y-3">
             {list.map((a) => (
               <li key={a.shipmentId}>
-                {/* 44px minimum touch target — read on a phone, at a gate (C12). */}
+                { }
                 <Link to={`/deliveries/${a.shipmentId}`} className="block min-h-touch">
                   <Card className="p-4">
                     <div className="flex items-start gap-3">

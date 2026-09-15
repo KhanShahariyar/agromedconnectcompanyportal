@@ -8,7 +8,7 @@ import { DataProvider } from '@/data/DataProvider'
 import { SessionProvider } from '@/auth/SessionProvider'
 import { AccessProvider } from '@/access/Gate'
 import { ROLE_PERMISSIONS } from '@/access/can'
-import { MockAdapter } from '@/data/mock/MockAdapter'
+import { MockAdapter } from '@/test/fixtures/MockAdapter'
 import { CompanyShell } from '@/layouts/CompanyShell'
 import { COMPANY_NAV, COMPANY_NAV_ACCOUNT, COMPANY_NAV_SUPPORT, DELIVERY_NAV } from '@/layouts/NavConfig'
 import { Settings } from '@/features/misc/Settings'
@@ -59,8 +59,7 @@ describe('audit: colour discipline (C4)', () => {
       const text = readFileSync(file, 'utf8')
       for (const line of text.split('\n')) {
         const trimmed = line.trim()
-        // The rule is about colour in code, not prose. Comments explaining why
-        // a token exists are allowed to name the value they are explaining.
+
         const isComment = trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')
         if (isComment || trimmed.includes('http')) continue
         if (/#[0-9a-fA-F]{6}\b/.test(line)) {
@@ -96,7 +95,7 @@ describe('audit: removals (C11)', () => {
 describe('audit: delivery mode never appears in the company portal (C14)', () => {
   it('is absent from Settings entirely — not shown, not editable', async () => {
     wrap(<Settings />)
-    // Wait for the screen to settle before asserting an absence.
+
     expect(await screen.findByRole('heading', { name: /settings/i })).toBeInTheDocument()
     expect(screen.queryByTestId('delivery-mode')).not.toBeInTheDocument()
     expect(screen.queryByRole('radiogroup', { name: /delivery/i })).not.toBeInTheDocument()
@@ -119,7 +118,7 @@ describe('audit: the logo goes through one component, never below 32px (C13)', (
   it('has no direct brand image reference outside Logo.tsx', () => {
     const offenders = walk(SRC)
       .filter((f) => !f.endsWith('ui/Logo.tsx'))
-      .filter((f) => /assets\/brand\//.test(readFileSync(f, 'utf8')))
+      .filter((f) => /assets\/brand\
     expect(offenders).toEqual([])
   })
 
@@ -179,9 +178,9 @@ describe('audit: an Employee never sees the company account or the catalogue', (
 describe('audit: directions always open Google Maps', () => {
   it('for a pinned order and for one with only an address', () => {
     expect(googleMapsDirections({ lat: 1, lng: 2, precision: 'exact' }, 'a'))
-      .toMatch(/^https:\/\/www\.google\.com\/maps\/dir\//)
+      .toMatch(/^https:\/\/www\.google\.com\/maps\/dir\
     expect(googleMapsDirections({ lat: null, lng: null, precision: 'none' }, 'a'))
-      .toMatch(/^https:\/\/www\.google\.com\/maps\/dir\//)
+      .toMatch(/^https:\/\/www\.google\.com\/maps\/dir\
   })
 })
 

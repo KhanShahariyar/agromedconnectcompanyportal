@@ -6,11 +6,6 @@ import { useT } from '@/i18n/LocaleProvider'
 import { DELIVERY_NAV } from './NavConfig'
 import { LocaleToggle } from './LocaleToggle'
 
-/**
- * A delivery man works on a phone, standing at a gate, and needs two actions.
- * A sidebar-and-cards layout is the wrong instrument, so this shell is single
- * column with a bottom tab bar and 44px touch targets throughout (C12).
- */
 export function DeliveryShell({ userName, onSignOut, children }: {
   userName: string
   onSignOut: () => void

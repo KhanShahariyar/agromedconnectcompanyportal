@@ -32,11 +32,6 @@ export interface VerificationEvent {
   decidedBy: string | null
 }
 
-/**
- * G1 — NID and TIN are the most sensitive PII in the system. The portal only
- * ever sees presence, status and a server-rendered mask; the full value is
- * never sent to the browser at all.
- */
 export interface IdentityDocument {
   id: Uuid
   kind: 'nid' | 'tin' | 'passport'
@@ -53,7 +48,7 @@ export interface VerificationDossier {
   certificates: Certificate[]
   identityDocuments: IdentityDocument[]
   timeline: VerificationEvent[]
-  /** What is still required before the dossier can be submitted. */
+
   outstanding: string[]
 }
 

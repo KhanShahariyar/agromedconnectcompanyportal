@@ -41,7 +41,8 @@ export interface AppNotification {
   title: string
   body: string
   createdAt: IsoDateTime
-  readAt: IsoDateTime | null
+  sent: boolean
+  sender: string
   link: string | null
 }
 

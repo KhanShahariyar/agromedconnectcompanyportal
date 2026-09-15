@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useData } from '@/data/DataProvider'
 import { useQuery } from '@/data/useQuery'
 import { useFormat, useT } from '@/i18n/LocaleProvider'
@@ -8,9 +8,8 @@ import {
 } from '@/ui'
 import type { Column } from '@/ui'
 import { Gate } from '@/access/Gate'
+import { onPushMessage } from '@/push/push'
 import type { AppNotification, Payout, Review } from '@/data/contracts'
-
-/* --------------------------------------------------------------- Reviews */
 
 export function Reviews() {
   const t = useT()
@@ -74,8 +73,6 @@ export function Reviews() {
   )
 }
 
-/* -------------------------------------------------------------- Payments */
-
 export function Payments() {
   const t = useT()
   const f = useFormat()
@@ -88,7 +85,7 @@ export function Payments() {
     { key: 'amount', header: t('col.total'), align: 'right', render: (p) => f.money(p.amount) },
     { key: 'status', header: t('col.status'), render: (p) => <Badge tone={p.status === 'paid' ? 'success' : 'warning'}>{p.status}</Badge> },
     { key: 'deductions', header: t('payments.deductions'), render: (p) =>
-      // What was taken, not just a net figure — a bare number invites a dispute.
+
       p.deductions.length === 0 ? <span className="text-ink-faint">{t('common.none')}</span> : (
         <ul className="text-xs text-ink-soft">
           {p.deductions.map((d) => <li key={d.label}>{d.label} −{f.money(d.amount)}</li>)}
@@ -116,39 +113,54 @@ export function Payments() {
   )
 }
 
-/* --------------------------------------------------------- Notifications */
-
 export function Notifications() {
   const t = useT()
   const f = useFormat()
   const api = useData()
-  const q = useQuery(['notifications'], () => api.listNotifications({ page: 1, pageSize: 20 }))
+  const [page, setPage] = useState(1)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const q = useQuery(['notifications', page], () => api.listNotifications({ page, pageSize: 20 }))
+
+  const refetch = q.refetch
+  useEffect(() => onPushMessage(() => { refetch() }), [refetch])
+
+  const markRead = async (id?: string) => {
+    setBusy(true); setError('')
+    try { await api.markNotificationsRead(id); setPage(1); q.refetch() }
+    catch { setError(t('notifications.deleteError')) }
+    finally { setBusy(false) }
+  }
 
   return (
     <div>
       <PageHeader title={t('notifications.title')} />
+      <Button disabled={busy} onClick={() => markRead()}>{t('notifications.markAll')}</Button>
+      {error && <p role="alert">{error}</p>}
       <AsyncBoundary query={q}>
         {(p) => (
           <ul className="space-y-2">
             {p.items.map((n: AppNotification) => (
               <li key={n.id}>
-                <Card className={`p-4 ${n.readAt ? '' : 'border-primary/30'}`}>
+                <Card className="p-4 border-primary/30">
                   <div className="flex items-baseline gap-2">
                     <span className="text-ink">{n.title}</span>
                     <span className="ml-auto text-xs text-ink-faint">{f.dateTime(n.createdAt)}</span>
                   </div>
                   <p className="mt-1 text-sm text-ink-soft">{n.body}</p>
+                  <small>{n.sender}</small>
+                  <Button disabled={busy} onClick={() => markRead(n.id)}>{t('notifications.markOne')}</Button>
                 </Card>
               </li>
             ))}
           </ul>
         )}
       </AsyncBoundary>
+      <Button disabled={page === 1 || busy} onClick={() => setPage(page - 1)}>←</Button>
+      <Button disabled={(q.data?.items.length ?? 0) < 20 || busy} onClick={() => setPage(page + 1)}>→</Button>
     </div>
   )
 }
-
-/* -------------------------------------------------------------- Feedback */
 
 export function Feedback() {
   const t = useT()
@@ -189,8 +201,6 @@ export function Feedback() {
   )
 }
 
-/* ------------------------------------------------------- Solution Center */
-
 export function SolutionCenter() {
   const t = useT()
   const f = useFormat()
@@ -220,8 +230,6 @@ export function SolutionCenter() {
     </div>
   )
 }
-
-/* ------------------------------------------------ Profile / Help / Support */
 
 export function CompanyProfile() {
   const t = useT()

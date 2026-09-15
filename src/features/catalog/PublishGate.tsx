@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom'
 import { useT } from '@/i18n/LocaleProvider'
 import type { PublishBlocker, PublishReadiness } from '@/data/contracts'
 
-/** Where the fix for each blocker lives. A disabled button with no route out
- *  is the most common way a compliance rule reads as a bug. */
 const FIX_ROUTE: Partial<Record<PublishBlocker, string>> = {
   missing_certificate: '/verification',
   certificate_not_verified: '/verification',

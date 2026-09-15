@@ -1,8 +1,10 @@
 import type { DataAdapter } from '../DataAdapter'
 import { problem } from '../DataAdapter'
 import type {
+  Category,
   AdvancePayload, AppNotification, Certificate, DeliveryAssignment, Discount, DiscountConflict,
-  FeedbackInput, FulfilmentStep, HandoverInput, IdentityDocument, Listing, ListingStatus,
+  FeedbackInput, FulfilmentStep, HandoverInput, IdentityDocument, InvitationIssued,
+  Listing, ListingStatus,
   MarginBreakdown, MarketIntelligence, Member, OfferStatus, OrderDetail, OrderStatus,
   OrderSummary, Organisation, Page, PageQuery, Payout, PerformanceReport, PortalRole,
   PublishReadiness, RegisterCompanyInput, Review, SaveDiscountInput, SaveListingInput,
@@ -10,31 +12,6 @@ import type {
   Uuid, VerificationDossier,
 } from '../contracts'
 
-/**
- * The real API.
- *
- * This is the whole cost of moving off the mock: App.tsx swaps one adapter for
- * another and every screen carries on unchanged, because both implement the
- * same interface and the mock's types were written from the API's contract in
- * the first place.
- *
- * Two shapes need translating, and only two:
- *
- *   1. The API pages by opaque cursor, deliberately — offset paging drifts when
- *      rows are inserted mid-scan and gets slower the deeper you go. The portal
- *      shows page numbers, so this adapter keeps a small cursor ledger per
- *      query and lets the server keep its seek.
- *   2. The API returns { items, nextCursor, totalCount }; the portal wants
- *      { items, page, pageSize, total }.
- */
-
-/**
- * What /auth/login actually returns.
- *
- * Flat, and shared with the Flutter farmer app — which is why the portal adapts
- * to it rather than the other way round. Changing this response to suit a second
- * client would break the first one, and the farmer app is finished and tested.
- */
 interface ApiLoginResponse {
   accessToken: string
   refreshToken: string
@@ -61,7 +38,7 @@ interface ApiPaged<T> {
 
 export interface HttpAdapterOptions {
   baseUrl?: string
-  /** Called whenever a request comes back 401, so the shell can sign out. */
+
   onUnauthorised?: () => void
 }
 
@@ -71,23 +48,8 @@ export class HttpAdapter implements DataAdapter {
   private accessToken: string | null = null
   private locale = 'bn-BD'
 
-  /**
-   * The in-flight rotation, so concurrent 401s share one refresh.
-   *
-   * A dashboard fires half a dozen requests at once. Without this, an expired
-   * token means six simultaneous rotations — and refresh tokens are single-use,
-   * so five of them present an already-rotated token, the server reads that as
-   * a replayed credential exactly as it should, and revokes the whole family.
-   * The user is signed out of everywhere for the crime of loading a page.
-   */
   private inFlightRefresh: Promise<boolean> | null = null
 
-  /**
-   * Cursors seen per query, indexed by page number. Page 1 needs none, so
-   * index 0 stays empty; page N uses the cursor returned with page N-1.
-   * Stepping one screen at a time is what the UI offers, and that is what this
-   * supports.
-   */
   private readonly cursors = new Map<string, (string | undefined)[]>()
 
   constructor(opts: HttpAdapterOptions = {}) {
@@ -97,28 +59,12 @@ export class HttpAdapter implements DataAdapter {
 
   setAccessToken(token: string | null) { this.accessToken = token }
 
-  /** The server renders money and dates, so it has to be told which language. */
   setLocale(locale: string) { this.locale = locale }
 
-  /**
-   * Endpoints where a 401 means "those credentials are wrong", not "your
-   * session ended". Signing in is not a session that expired.
-   */
   private static isAuthAttempt(path: string) {
     return path.startsWith('/api/v1/auth/')
   }
 
-  /**
-   * Rotates the access token using the refresh cookie the API sets at sign-in.
-   *
-   * The portal never sees that cookie: it is HttpOnly, so script cannot read it
-   * and an XSS hole cannot steal it. The browser attaches it to /api/v1/auth
-   * calls on its own, which is why every request here sends credentials.
-   *
-   * Returns false rather than throwing when the session is genuinely over —
-   * the caller then reports the original 401, which is what the shell already
-   * knows how to handle.
-   */
   private async refresh(): Promise<boolean> {
     if (this.inFlightRefresh) return this.inFlightRefresh
 
@@ -135,8 +81,7 @@ export class HttpAdapter implements DataAdapter {
         this.setAccessToken(raw.accessToken)
         return true
       } catch {
-        // A network failure is not proof the session is dead, so the token is
-        // left alone and the caller surfaces a transient error instead.
+
         return false
       }
     }
@@ -145,15 +90,6 @@ export class HttpAdapter implements DataAdapter {
     return this.inFlightRefresh
   }
 
-  /**
-   * Restores a session on page load, from the refresh cookie alone.
-   *
-   * Before this the portal kept its access token in memory and nothing else, so
-   * a reload — or a middle-click into a new tab — dropped the user at the sign-in
-   * screen with their work behind them. There was also no rotation at all, so a
-   * session simply stopped working after fifteen minutes and every screen began
-   * failing at once.
-   */
   async restoreSession(): Promise<Session | null> {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/auth/token/refresh`, {
@@ -165,9 +101,7 @@ export class HttpAdapter implements DataAdapter {
       if (!response.ok) return null
       const raw = (await response.json()) as ApiLoginResponse
       this.setAccessToken(raw.accessToken)
-      // Composed the same way a fresh sign-in is, so a restored session is
-      // indistinguishable from one the user just created -- including the
-      // organisation record the shell needs before its first paint.
+
       return await this.toSession(raw)
     } catch {
       return null
@@ -179,37 +113,28 @@ export class HttpAdapter implements DataAdapter {
       Accept: 'application/json',
       'Accept-Language': this.locale,
     }
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    const isForm = body instanceof FormData
+    // A multipart body writes its own Content-Type, boundary included. Setting
+    // it here produces a body the server cannot parse.
+    if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`
 
     let response: Response
     try {
       response = await fetch(`${this.baseUrl}${path}`, {
         method, headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
-        // So the browser attaches the HttpOnly refresh cookie to the auth calls.
-        // The API scopes that cookie to /api/v1/auth, so no other endpoint
-        // actually receives one.
+        body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+
         credentials: 'include',
       })
     } catch {
-      // A dead network is not a 500. Saying so lets the error state offer
-      // "try again" instead of implying the server rejected the request.
+
       throw problem('network_unreachable', 'Could not reach the server', 0,
         'Check your connection and try again.')
     }
 
-    // A 401 anywhere else means the token died mid-session, and the shell
-    // should sign the user out. A 401 from the sign-in call itself means the
-    // password was wrong, and replacing that with "please sign in again" tells
-    // someone who is already signing in precisely nothing — which is what it
-    // did, and why a wrong password looked like a broken portal.
     if (response.status === 401 && !HttpAdapter.isAuthAttempt(path)) {
-      // One rotation, then one retry. A token can be rejected while still
-      // looking current — a revoked membership, a rotated signing key, a clock
-      // that drifted — and retrying once turns that into a blip the user never
-      // sees. Retrying more than once turns a session that is genuinely over
-      // into a loop.
+
       if (await this.refresh()) {
         try {
           response = await fetch(`${this.baseUrl}${path}`, {
@@ -236,9 +161,7 @@ export class HttpAdapter implements DataAdapter {
     const payload = text ? JSON.parse(text) : undefined
 
     if (!response.ok) {
-      // The API speaks RFC 9457, so its problem document passes straight
-      // through — including the stable `code` screens branch on, which never
-      // changes with language.
+
       throw {
         type: payload?.type ?? 'about:blank',
         title: payload?.title ?? 'Request failed',
@@ -285,8 +208,6 @@ export class HttpAdapter implements DataAdapter {
     return `${path}|${q.search ?? ''}|${q.pageSize ?? 20}|${JSON.stringify(extra)}`
   }
 
-  // ------------------------------------------------------------------- auth
-
   async login(identifier: string, password: string): Promise<Session> {
     const raw = await this.request<ApiLoginResponse>('POST', '/api/v1/auth/login', { identifier, password })
     this.setAccessToken(raw.accessToken)
@@ -299,15 +220,6 @@ export class HttpAdapter implements DataAdapter {
     return this.toSession(raw)
   }
 
-  /**
-   * Composes the portal's session from the shared login response plus the
-   * company record.
-   *
-   * The second call is not waste: login returns an organisation *id* and a
-   * name, and the portal needs verification status, blacklisting and the
-   * assigned delivery mode from the first paint — the shell decides whether to
-   * show the verification banner before any screen renders.
-   */
   private async toSession(raw: ApiLoginResponse): Promise<Session> {
     const organisation = await this.getOrganisation()
 
@@ -326,8 +238,7 @@ export class HttpAdapter implements DataAdapter {
       },
       organisation,
       role: toPortalRole(raw.user.roles),
-      // The server's list, not the portal's. It already accounts for per-member
-      // grants and denials, which a role name alone cannot express.
+
       permissions: raw.user.permissions ?? [],
     }
   }
@@ -350,16 +261,13 @@ export class HttpAdapter implements DataAdapter {
     try { await this.request('POST', '/api/v1/auth/logout') } finally { this.setAccessToken(null) }
   }
 
-  // -------------------------------------------- organisation & verification
-
   getOrganisation(): Promise<Organisation> {
     return this.request('GET', '/api/v1/company/profile')
   }
 
   updateOrganisation(patch: Partial<Organisation>): Promise<Organisation> {
     if ('deliveryMode' in patch) {
-      // Refused here as well as server-side. A UI regression that tries this
-      // should break loudly rather than appear to succeed.
+
       return Promise.reject(problem(
         'delivery_mode_not_self_assignable',
         'Delivery mode is assigned by the platform', 403,
@@ -376,6 +284,13 @@ export class HttpAdapter implements DataAdapter {
     return this.request('POST', '/api/v1/company/verification/certificates', input)
   }
 
+  uploadCertificateDocument(certificateId: Uuid, file: File): Promise<Certificate> {
+    const form = new FormData()
+    form.append('file', file)
+    return this.request(
+      'POST', `/api/v1/company/verification/certificates/${certificateId}/document`, form)
+  }
+
   submitIdentityDocument(input: SubmitIdentityInput): Promise<IdentityDocument> {
     return this.request('POST', '/api/v1/company/verification/identity', input)
   }
@@ -384,12 +299,34 @@ export class HttpAdapter implements DataAdapter {
     return this.request('POST', '/api/v1/company/verification/submit')
   }
 
-  // --------------------------------------------------------------- catalogue
-
-  listListings(q: PageQuery & { kind?: 'product' | 'service'; status?: ListingStatus }) {
+  listListings(q: PageQuery & { kind?: 'product' | 'service'; status?: ListingStatus; categoryId?: Uuid }) {
+    // category_id may name any tier; the API matches the whole subtree beneath
+    // it, so a division here means "everything of mine under Animal".
     return this.paged<Listing>(
-      this.queryKey('listings', q, { kind: q.kind, status: q.status }),
-      '/api/v1/company/listings', q, { kind: q.kind, status: q.status })
+      this.queryKey('listings', q, { kind: q.kind, status: q.status, category_id: q.categoryId }),
+      '/api/v1/company/listings', q, { kind: q.kind, status: q.status, category_id: q.categoryId })
+  }
+
+  listCategories(params?: { level?: number; parentId?: Uuid }): Promise<Category[]> {
+    const qs = new URLSearchParams()
+    if (params?.parentId) qs.set('parent_id', params.parentId)
+    else if (params?.level != null) qs.set('level', String(params.level))
+    const suffix = qs.toString()
+    return this.request('GET', `/api/v1/categories${suffix ? `?${suffix}` : ''}`)
+  }
+
+  getCategoryBreadcrumb(id: Uuid): Promise<Category[]> {
+    return this.request('GET', `/api/v1/categories/${id}/breadcrumb`)
+  }
+
+  uploadListingImage(listingId: Uuid, file: File): Promise<Listing> {
+    const form = new FormData()
+    form.append('file', file)
+    return this.request('POST', `/api/v1/company/listings/${listingId}/media`, form)
+  }
+
+  deleteListingImage(listingId: Uuid, mediaId: Uuid): Promise<Listing> {
+    return this.request('DELETE', `/api/v1/company/listings/${listingId}/media/${mediaId}`)
   }
 
   getListing(id: Uuid): Promise<Listing> {
@@ -420,8 +357,6 @@ export class HttpAdapter implements DataAdapter {
     return this.request('PUT', `/api/v1/company/listings/${id}/availability`, slots)
   }
 
-  // --------------------------------------------------------------- inventory
-
   listStock(q: PageQuery) {
     return this.paged<StockRow>(this.queryKey('stock', q), '/api/v1/company/inventory', q)
   }
@@ -429,8 +364,6 @@ export class HttpAdapter implements DataAdapter {
   adjustStock(listingId: Uuid, delta: number, reason: string): Promise<StockRow> {
     return this.request('POST', `/api/v1/company/inventory/${listingId}/adjust`, { delta, reason })
   }
-
-  // ------------------------------------------------------------------ orders
 
   listOrders(q: PageQuery & { status?: OrderStatus }) {
     return this.paged<OrderSummary>(
@@ -451,8 +384,6 @@ export class HttpAdapter implements DataAdapter {
   assignDeliveryPerson(orderId: Uuid, userId: Uuid): Promise<OrderDetail> {
     return this.request('POST', `/api/v1/company/orders/${orderId}/assign`, { userId })
   }
-
-  // --------------------------------------------------------------- discounts
 
   listDiscounts(q: PageQuery & { status?: OfferStatus }) {
     return this.paged<Discount>(
@@ -478,20 +409,16 @@ export class HttpAdapter implements DataAdapter {
     return this.request('GET', `/api/v1/company/discounts/margin?${params}`)
   }
 
-  // ---------------------------------------------------- market intelligence
-
   getMarketIntelligence(window: '3m' | '6m' | '12m'): Promise<MarketIntelligence> {
     return this.request('GET', `/api/v1/company/market?window=${window}`)
   }
-
-  // -------------------------------------------------------------------- team
 
   listMembers(q: PageQuery) {
     return this.paged<Member>(this.queryKey('members', q), '/api/v1/company/team', q)
   }
 
-  inviteMember(email: string, role: PortalRole): Promise<void> {
-    return this.request('POST', '/api/v1/company/team/invitations', { identifier: email, role })
+  inviteMember(identifier: string, role: PortalRole): Promise<InvitationIssued> {
+    return this.request('POST', '/api/v1/company/team/invitations', { identifier, role })
   }
 
   setMemberRole(membershipId: Uuid, role: PortalRole): Promise<Member> {
@@ -505,8 +432,6 @@ export class HttpAdapter implements DataAdapter {
   removeMember(membershipId: Uuid): Promise<void> {
     return this.request('DELETE', `/api/v1/company/team/${membershipId}`)
   }
-
-  // -------------------------------------- reports, reviews, payments, misc
 
   getPerformanceReport(window: '3m' | '6m' | '12m'): Promise<PerformanceReport> {
     return this.request('GET', `/api/v1/company/reports/performance?window=${window}`)
@@ -533,14 +458,24 @@ export class HttpAdapter implements DataAdapter {
   }
 
   listNotifications(q: PageQuery) {
-    return this.paged<AppNotification>(this.queryKey('notifications', q), '/api/v1/company/notifications', q)
+    return this.paged<AppNotification>(this.queryKey('notifications', q), '/api/v1/notifications', q)
+  }
+
+  registerDeviceToken(token: string, platform: 'web'): Promise<void> {
+    return this.request('POST', '/api/v1/notifications/device-tokens', { token, platform })
+  }
+
+  removeDeviceToken(token: string, platform: 'web'): Promise<void> {
+    return this.request('DELETE', '/api/v1/notifications/device-tokens', { token, platform })
+  }
+
+  markNotificationsRead(id?: Uuid): Promise<void> {
+    return this.request('DELETE', `/api/v1/notifications${id ? `/${id}` : ''}`)
   }
 
   listSolutions(): Promise<Solution[]> {
     return this.request('GET', '/api/v1/company/solutions')
   }
-
-  // ---------------------------------------------------------------- delivery
 
   listMyAssignments(status: 'active' | 'completed' = 'active'): Promise<DeliveryAssignment[]> {
     return this.request('GET', `/api/v1/company/deliveries?status=${status}`)
@@ -555,14 +490,6 @@ export class HttpAdapter implements DataAdapter {
   }
 }
 
-/**
- * Database roles onto the three the portal knows.
- *
- * `inventory_staff` and `support` are seeded seller roles that predate this
- * portal. They are day-to-day operational roles, so they land on Employee
- * rather than being rejected — an existing member should not be locked out
- * because the portal recognises fewer names than the database does.
- */
 function toPortalRole(roles: string[]): PortalRole {
   if (roles.includes('owner')) return 'owner'
   if (roles.includes('delivery_man')) return 'delivery_man'

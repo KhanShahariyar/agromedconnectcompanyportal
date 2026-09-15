@@ -1,4 +1,4 @@
-/* Olive Earth custom properties. Mirrors src/design/tokens.ts — keep in step. */
+
 :root {
   --primary: #004B23;
   --primary-hover: #00381A;
@@ -22,16 +22,6 @@
   color-scheme: light;
 }
 
-/*
- * No height rule on the root chain at all.
- *
- * `height: 100%` pinned the page to the viewport and made everything below the
- * fold unreachable. `min-height: 100%` fixed that but left a percentage chain
- * that resolved against an auto-height parent and produced a phantom 72px of
- * scroll into blank space. The shells declare their own `min-h-screen`, which
- * is all that was ever needed.
- */
-
 body {
   margin: 0;
   background: var(--base);
@@ -39,8 +29,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Public Sans carries no Bengali glyphs; without this the browser falls back to
-   whatever the OS supplies, differently on every machine. */
 :lang(bn) {
   font-family: 'Noto Sans Bengali', 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 }

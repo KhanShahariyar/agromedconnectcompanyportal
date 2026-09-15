@@ -3,7 +3,7 @@ import { givenName } from './Dashboard'
 
 describe('givenName', () => {
   it('skips the honorific that opens most Bangladeshi names', () => {
-    // Found on live data: the dashboard greeted the user as "Md.".
+
     expect(givenName('Md. Rahim Uddin')).toBe('Rahim')
     expect(givenName('Mst. Shapla Begum')).toBe('Shapla')
   })

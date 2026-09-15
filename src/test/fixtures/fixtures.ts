@@ -1,9 +1,8 @@
 import type {
   AppNotification, Certificate, DeliveryAssignment, Discount, IdentityDocument, Listing,
   Member, Money, OrderDetail, OrderLine, Organisation, Payout, Review, Solution, StockRow,
-} from '../contracts'
+} from '@/data/contracts'
 
-/** Money helper — mirrors the server's rendering so fixtures look like real payloads. */
 export function bdt(amountMinor: number): Money {
   const major = amountMinor / 100
   return {
@@ -18,10 +17,6 @@ const iso = (daysAgo: number) => new Date(Date.now() - daysAgo * 864e5).toISOStr
 export const ORG_ID = 'org-0001'
 export const USER_ID = 'usr-0001'
 
-/**
- * The catalogue mirrors the seeded listings in the API's storage directory, so
- * review screenshots resemble production rather than lorem ipsum.
- */
 interface Seedling {
   id: string
   slug: string
@@ -36,8 +31,7 @@ interface Seedling {
 }
 
 const CATALOGUE: Seedling[] = [
-  // The marketplace sells agricultural medicines and services, so "category" is
-  // the medicine type. Slicing charts by category would otherwise be a constant.
+
   { id: 'lst-01', slug: 'sonar-20sl', name: 'Sonar 20SL Insecticide', brand: 'AgroShield', category: 'Insecticide', priceMinor: 74500, kind: 'product', restricted: true, pack: [1, 'l'], weight: 1100 },
   { id: 'lst-02', slug: 'cypermex-10ec', name: 'Cypermex 10EC', brand: 'AgroShield', category: 'Insecticide', priceMinor: 62000, kind: 'product', restricted: true, pack: [500, 'ml'], weight: 560 },
   { id: 'lst-03', slug: 'aphidex-25wp', name: 'Aphidex 25WP', brand: 'CropCare', category: 'Insecticide', priceMinor: 48000, kind: 'product', restricted: true, pack: [250, 'g'], weight: 270 },
@@ -57,7 +51,6 @@ const CATALOGUE: Seedling[] = [
   { id: 'lst-17', slug: 'crop-disease-diagnosis', name: 'Crop Disease Diagnosis', brand: 'AgroLab', category: 'Service', priceMinor: 95000, kind: 'service' },
 ]
 
-/** Named ids so tests and review scripts can reach specific states directly. */
 export const SEED = {
   readyListingId: 'lst-09',
   listingWithUnverifiedCertificateId: 'lst-03',
@@ -125,7 +118,7 @@ export function buildCertificates(): Certificate[] {
     issuingAuthority: 'Department of Agricultural Extension',
     issuedOn: '2025-03-14',
     expiresOn: s.id === 'lst-05' ? '2026-10-01' : '2028-03-13',
-    // lst-03 is deliberately still under review — it drives the publish-gate test.
+
     status: s.id === SEED.listingWithUnverifiedCertificateId ? 'under_review' : 'verified',
     rejectionReason: null,
     documentUrl: `/api/v1/certificates/crt-${s.id}/document`,
@@ -143,7 +136,7 @@ export function buildOrganisation(): Organisation {
     tinNumber: '412886539104',
     verificationStatus: 'verified',
     verifiedAt: iso(120),
-    // C14 — assigned by the platform, never editable here.
+
     deliveryMode: 'both',
     deliveryModeAssignedAt: iso(120),
     isBlacklisted: false,
@@ -265,9 +258,7 @@ export function buildMembers(): Member[] {
 export function buildDiscounts(): Discount[] {
   const d = (n: number) => new Date(Date.now() + n * 864e5).toISOString()
   return [
-    // These two deliberately collide: a type-wide offer and a single-product
-    // offer over the same days, at equal priority and neither stackable. That
-    // is the ambiguous case the editor refuses to save.
+
     { id: 'off-01', code: 'INSECT10', name: 'Insecticide season 10%', basis: 'percentage', discountPercent: 10, discountAmount: null, maxDiscount: bdt(50000), minOrder: bdt(100000), scope: { kind: 'category', categoryId: 'cat-insecticide' }, startsAt: d(-10), endsAt: d(20), status: 'active', isStackable: false, stackPriority: 5, stackGroup: null, maxRedemptions: 500, redemptionCount: 143 },
     { id: 'off-02', code: 'SONAR50', name: '৳500 off Sonar 20SL', basis: 'fixed', discountPercent: null, discountAmount: bdt(50000), maxDiscount: null, minOrder: bdt(200000), scope: { kind: 'listing', listingIds: ['lst-01'] }, startsAt: d(-5), endsAt: d(15), status: 'active', isStackable: false, stackPriority: 5, stackGroup: null, maxRedemptions: null, redemptionCount: 22 },
     { id: 'off-03', code: 'FUNGI15', name: 'Fungicide pre-monsoon 15%', basis: 'percentage', discountPercent: 15, discountAmount: null, maxDiscount: null, minOrder: null, scope: { kind: 'category', categoryId: 'cat-fungicide' }, startsAt: d(3), endsAt: d(45), status: 'draft', isStackable: true, stackPriority: 2, stackGroup: 'seasonal', maxRedemptions: null, redemptionCount: 0 },
@@ -288,7 +279,7 @@ export function buildAssignments(listings: Listing[]): DeliveryAssignment[] {
       totalWeightGrams: 206600, hasRestrictedItems: true, deliveredAt: null,
     },
     {
-      // The common case until the Flutter app ships coordinate capture (R1).
+
       shipmentId: 'shp-02', orderId: 'ord-05', orderNumber: 'AM-2026-004315', status: 'assigned',
       assignedAt: iso(0), buyerName: 'Meherpur Krishi', buyerPhone: '+8801912345678',
       deliveryAddress: 'Gangni Bazar, Gangni, Meherpur', geographyName: 'Meherpur',
@@ -324,9 +315,9 @@ export function buildPayouts(): Payout[] {
 
 export function buildNotifications(): AppNotification[] {
   return [
-    { id: 'ntf-01', kind: 'order', title: 'New order AM-2026-004317', body: 'Padma Seeds placed an order for ৳12,400.00', createdAt: iso(0), readAt: null, link: '/orders/ord-07' },
-    { id: 'ntf-02', kind: 'verification', title: 'Certificate expiring', body: 'FungiStop 70WP registration expires in 25 days.', createdAt: iso(1), readAt: null, link: '/verification' },
-    { id: 'ntf-03', kind: 'discount', title: 'Discount ending soon', body: 'UREA50 ends in 15 days.', createdAt: iso(2), readAt: iso(1), link: '/discounts' },
+    { id: 'ntf-01', kind: 'order', title: 'New order AM-2026-004317', body: 'Padma Seeds placed an order for ৳12,400.00', createdAt: iso(0), sent: true, sender: 'AgroMedConnect', link: '/orders/ord-07' },
+    { id: 'ntf-02', kind: 'verification', title: 'Certificate expiring', body: 'FungiStop 70WP registration expires in 25 days.', createdAt: iso(1), sent: true, sender: 'AgroMedConnect', link: '/verification' },
+    { id: 'ntf-03', kind: 'discount', title: 'Discount ending soon', body: 'UREA50 ends in 15 days.', createdAt: iso(2), sent: true, sender: 'AgroMedConnect', link: '/discounts' },
   ]
 }
 

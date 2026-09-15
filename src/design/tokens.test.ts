@@ -27,16 +27,12 @@ describe('Olive Earth tokens', () => {
   })
 
   it('ships exactly the five validated series colours, in order', () => {
-    // Verified with the dataviz validator against surface #FDFBF4:
-    // lightness band, chroma floor, CVD separation, normal-vision floor and
-    // contrast all PASS. Changing any value here re-opens that question — re-run
-    // scripts/validate_palette.js before editing.
+
     expect([...SERIES]).toEqual(['#00703A', '#1E97C4', '#D06810', '#BE2F6E', '#7A4CC0'])
   })
 
   it('caps categorical hues at five and gives overflow a neutral, not a sixth hue', () => {
-    // No sixth hue survives deuteranopia beside these five, so a 6th category
-    // folds into "Other" rather than getting a generated colour.
+
     expect(SERIES).toHaveLength(5)
     expect(SERIES_OTHER).not.toEqual(expect.stringMatching(new RegExp(SERIES.join('|'), 'i')))
   })

@@ -107,10 +107,7 @@ describe('DeliveryShell', () => {
 
 describe('CompanyShell scroll safety', () => {
   it('never leaves overflow:hidden on the body after toggling the drawer', async () => {
-    // The bug this guards: the lock effect used to save the previous overflow
-    // value and restore it on cleanup. On the second toggle it captured its own
-    // 'hidden' and restored that forever, so the page stopped scrolling and
-    // stayed stopped. Toggling repeatedly must always end unlocked.
+
     renderShell()
     const toggle = screen.getByRole('button', { name: /show or hide the menu/i })
     for (let i = 0; i < 4; i++) {
@@ -131,7 +128,7 @@ describe('CompanyShell collapsed rail', () => {
     await userEvent.click(screen.getByRole('button', { name: /show or hide the menu/i }))
 
     const links = screen.getAllByRole('link')
-    // Every nav link keeps a name for assistive tech even with the text gone.
+
     for (const link of links) {
       expect(link.getAttribute('aria-label')).toBeTruthy()
       expect(link.getAttribute('title')).toBeTruthy()

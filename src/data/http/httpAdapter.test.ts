@@ -12,9 +12,7 @@ function respondWith(status: number, body: unknown) {
 
 describe('HttpAdapter auth errors', () => {
   it('surfaces the real reason a sign-in failed, not "session ended"', async () => {
-    // The bug this guards: every 401 was rewritten as "Your session has ended
-    // — please sign in again", which is nonsense on the sign-in screen and hid
-    // the actual cause from the person trying to get in.
+
     respondWith(401, {
       code: 'invalid_credentials', title: 'Unauthenticated',
       detail: 'That phone number, email or password is incorrect.',
@@ -26,8 +24,7 @@ describe('HttpAdapter auth errors', () => {
       code: 'invalid_credentials',
       detail: 'That phone number, email or password is incorrect.',
     })
-    // Nor should a failed sign-in trigger a sign-out of a session that
-    // never existed.
+
     expect(onUnauthorised).not.toHaveBeenCalled()
   })
 

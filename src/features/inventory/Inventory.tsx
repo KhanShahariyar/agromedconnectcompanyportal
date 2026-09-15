@@ -32,8 +32,8 @@ export function Inventory() {
     <div>
       <PageHeader title={t('inventory.title')} description={t('inventory.subtitle')} />
 
-      {/* One chart, one encoding — the question is "is it below the line", which
-          a bar cannot answer without the reader doing arithmetic (C5). */}
+      {
+}
       <ChartScreen>
         <div className="mb-6">
           <ChartFrame title={t('inventory.chart')} encoding="bullet">

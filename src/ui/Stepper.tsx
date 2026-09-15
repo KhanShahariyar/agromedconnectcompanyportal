@@ -7,14 +7,6 @@ export interface Step {
   actor?: string | null
 }
 
-/**
- * Renders a fulfilment machine as steps with a timestamp and actor each.
- *
- * `pendingNote` says who the system is waiting on when the next step is not the
- * viewer's to take — spec 8.1 requires that a company cannot mark a partner
- * delivery complete, so the screen must explain the wait rather than show a
- * dead control.
- */
 export function Stepper({ steps, currentIndex, pendingNote }: {
   steps: Step[]
   currentIndex: number

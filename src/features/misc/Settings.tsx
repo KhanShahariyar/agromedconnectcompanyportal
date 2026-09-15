@@ -32,8 +32,8 @@ export function Settings() {
                 </>
               }
             >
-              {/* privacy.usp_execute_erasure overwrites personal data but retains
-                  the transactional record — promising total erasure would be false. */}
+              {
+}
               {t('settings.deleteCompany.confirm')}
             </Modal>
           </div>

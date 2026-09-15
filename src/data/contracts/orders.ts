@@ -12,11 +12,6 @@ export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number]
 export const DELIVERY_TYPES = ['own', 'partner', 'pickup'] as const
 export type DeliveryType = (typeof DELIVERY_TYPES)[number]
 
-/**
- * UI-level fulfilment steps, wider than the DB status column, because
- * "assigned to a delivery man" and "handed to platform delivery" are shipment
- * facts rather than order statuses.
- */
 export type FulfilmentStep =
   | 'confirmed'
   | 'processing'
@@ -25,7 +20,6 @@ export type FulfilmentStep =
   | 'handed_to_platform'
   | 'delivered'
 
-/** Spec 8.1 — the two machines. Only one applies to any given order. */
 export const ORDER_STATUS_FLOW: Record<'own' | 'partner', readonly FulfilmentStep[]> = {
   own: ['confirmed', 'processing', 'dispatched', 'assigned', 'delivered'],
   partner: ['confirmed', 'processing', 'dispatched', 'handed_to_platform', 'delivered'],
@@ -35,7 +29,7 @@ export interface OrderLine {
   id: Uuid
   lineNumber: number
   listingId: Uuid
-  /** Snapshots — what was ordered, not what the listing says today. */
+
   skuSnapshot: string
   nameSnapshot: string
   quantity: number
@@ -62,7 +56,7 @@ export interface Shipment {
   status: ShipmentStatus
   deliveryType: DeliveryType
   trackingReference: string | null
-  /** G2 — new nullable column on sales.shipment. */
+
   assignedToUserId: Uuid | null
   assignedToName: string | null
   assignedAt: IsoDateTime | null
@@ -92,11 +86,11 @@ export interface OrderDetail extends OrderSummary {
   deliveryAddress: string | null
   deliveryContactPhone: string | null
   deliveryGeographyName: string | null
-  /** Same shape the courier sees, so both roles read one source of truth. */
+
   location: GeoPoint
   history: StatusHistoryEntry[]
   shipment: Shipment | null
-  /** Derived server-side so the UI never guesses. */
+
   currentStep: FulfilmentStep | null
   availableTransitions: FulfilmentStep[]
 }

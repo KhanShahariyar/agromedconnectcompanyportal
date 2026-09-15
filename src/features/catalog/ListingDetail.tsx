@@ -73,8 +73,8 @@ export function ListingDetail({ kind }: { kind: 'product' | 'service' }) {
 
             <Card className="p-5">
               <div className="mb-2 text-sm font-medium text-ink">Images</div>
-              {/* R3 — authenticity is a manual admin decision. The UI never
-                  claims a machine verified an image. */}
+              {
+}
               <p className="mb-3 text-xs text-ink-faint">{t('product.image.rule')}</p>
               {l.media.map((m) => (
                 <div key={m.id} className="mb-3">
@@ -113,7 +113,7 @@ export function ListingDetail({ kind }: { kind: 'product' | 'service' }) {
               </>
             }
           >
-            {/* Soft delete — order history must keep resolving its snapshots. */}
+            { }
             {t('product.delete.confirm')}
           </Modal>
         </div>

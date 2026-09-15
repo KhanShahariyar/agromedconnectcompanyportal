@@ -50,9 +50,7 @@ describe('ChartScreen encoding uniqueness', () => {
   })
 
   it('does not report a duplicate when the same frame re-renders (StrictMode)', () => {
-    // The first version of this guard reset a Set during ChartScreen's render.
-    // Tests passed; the real app threw immediately, because StrictMode renders
-    // children twice and each frame re-claimed its own encoding.
+
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     render(
       <StrictMode>

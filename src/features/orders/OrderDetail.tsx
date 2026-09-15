@@ -7,7 +7,6 @@ import { AsyncBoundary, Badge, Button, Card, PageHeader, SectionLabel, Stepper, 
 import type { Column } from '@/ui'
 import { Gate } from '@/access/Gate'
 
-// Lazily loaded so Leaflet does not land in the main bundle for every screen.
 const DeliveryLocation = lazy(() =>
   import('@/features/delivery/DeliveryLocation').then((m) => ({ default: m.DeliveryLocation })))
 import { currentIndex, isAwaitingPlatform, stepsFor } from './machine'
@@ -85,9 +84,9 @@ export function OrderDetail() {
                   <ol className="space-y-2">
                     {o.history.map((h) => (
                       <li key={h.id} data-testid="history-row" className="flex flex-wrap gap-2 text-sm">
-                        {/* C3 — the value is the contract, the label is i18n.
-                            History mixes order statuses and shipment steps, so
-                            fall through both key spaces before giving up. */}
+                        {
+
+}
                         <span className="text-ink">{statusLabel(t, h.toStatus)}</span>
                         <span className="text-ink-faint">{h.changedBy}</span>
                         <span className="ml-auto text-ink-soft">{f.dateTime(h.occurredAt)}</span>

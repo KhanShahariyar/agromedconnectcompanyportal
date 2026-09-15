@@ -1,25 +1,5 @@
 import type { Discount, DiscountConflict } from '@/data/contracts'
 
-/**
- * Discount conflict resolution.
- *
- * `pricing.offer` permits two offers to cover the same listing over the same
- * dates, with `is_stackable`, `stack_group` and `stack_priority` deciding what
- * actually happens at checkout. Most of those combinations are intentional; one
- * is not, and it is the one worth blocking:
- *
- *   - both stackable in the same group  -> they stack. Fine.
- *   - different priorities              -> the higher priority wins. Fine.
- *   - equal priorities, neither stacks  -> nothing decides. Ambiguous.
- *
- * The third case is a coin flip at checkout, so it is reported as `ambiguous`
- * and the editor refuses to save until a human settles it.
- *
- * Pure and synchronous by design: this is the rule Phase 2 must reimplement
- * server-side, and a pure function is the clearest possible specification of it.
- */
-
-/** Listings a category contains, so category-scoped offers can be compared. */
 export type CategoryMembers = Record<string, string[]>
 
 const LIVE_STATUSES = new Set<Discount['status']>(['draft', 'pending_approval', 'active', 'paused'])
@@ -28,7 +8,6 @@ function listingsOf(d: Discount, categories: CategoryMembers): string[] {
   return d.scope.kind === 'listing' ? d.scope.listingIds : (categories[d.scope.categoryId] ?? [])
 }
 
-/** Inclusive overlap of two half-open windows; `null` end means open-ended. */
 function overlap(
   aFrom: string, aTo: string | null, bFrom: string, bTo: string | null,
 ): { from: string; to: string | null } | null {
@@ -91,7 +70,6 @@ export function detectConflicts(
   return conflicts
 }
 
-/** Only ambiguity blocks a save; stacking and priority are warnings. */
 export function blockingConflicts(conflicts: DiscountConflict[]): DiscountConflict[] {
   return conflicts.filter((c) => c.resolution === 'ambiguous')
 }

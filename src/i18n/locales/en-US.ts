@@ -1,7 +1,5 @@
-/**
- * The key set is authoritative: `TranslationKey` is derived from this object,
- * so a key added here without a bn-BD counterpart fails parity.test.ts.
- */
+
+
 export const enUS = {
   'app.name': 'AgroMedConnect',
   'app.portal': 'Company Portal',
@@ -227,6 +225,12 @@ export const enUS = {
   'team.title': 'Team',
   'team.subtitle': 'Who can do what in your company account.',
   'team.invite': 'Invite member',
+  'action.done': 'Done',
+  'team.invite.send': 'Send invitation',
+  'team.invite.identifier': 'Email address or phone number',
+  'team.invite.role': 'Role',
+  'team.invite.issued': 'Send this link to the person you are inviting.',
+  'team.invite.once': 'The link is shown once. If it is lost, invite them again.',
   'role.owner': 'Admin',
   'role.manager': 'Employee',
   'role.delivery_man': 'Delivery Man',
@@ -278,6 +282,9 @@ export const enUS = {
   'settings.deleteCompany.confirm': 'Personal data is erased, but transactional records are retained as the law requires. This cannot be undone.',
   'profile.title': 'Company Profile',
   'profile.subtitle': 'How your company appears to farmers.',
+  'notifications.markOne': 'Mark as Read',
+  'notifications.markAll': 'Mark All as Read',
+  'notifications.deleteError': 'Could not remove notifications. Please retry.',
   'notifications.title': 'Notifications',
   'feedback.title': 'Feedback',
   'feedback.subtitle': 'Tell us what is working and what is not.',

@@ -3,10 +3,6 @@ import type { Uuid, Money, IsoDateTime } from './common'
 export const LISTING_STATUSES = ['draft', 'pending_review', 'active', 'paused', 'withdrawn'] as const
 export type ListingStatus = (typeof LISTING_STATUSES)[number]
 
-/**
- * R3 — image authenticity is decided by manual admin review. Perceptual-hash
- * matching only raises the flag; nothing here means "verified authentic".
- */
 export const IMAGE_REVIEW_STATUSES = ['not_submitted', 'pending_review', 'approved', 'flagged'] as const
 export type ImageReviewStatus = (typeof IMAGE_REVIEW_STATUSES)[number]
 
@@ -18,6 +14,25 @@ export interface MediaItem {
   displayOrder: number
   reviewStatus: ImageReviewStatus
   duplicateOfListingId: Uuid | null
+}
+
+/**
+ * A node in the platform taxonomy. The tree is three levels deep -- division,
+ * category, subcategory -- and a listing always hangs off a subcategory.
+ *
+ * `level` is 1-based to match how the tiers are talked about; the API derives
+ * it from the row's 0-based depth. Nothing here is hard-coded on the client:
+ * every option comes from /api/v1/categories, so a superadmin adding a
+ * subcategory shows up without a deploy.
+ */
+export interface Category {
+  id: Uuid
+  code: string
+  name: string
+  parentId: Uuid | null
+  depth: number
+  listingKind: 'product' | 'service' | 'both'
+  displayOrder: number
 }
 
 export interface Listing {
@@ -55,7 +70,6 @@ export type PublishBlocker =
   | 'no_price'
   | 'no_stock'
 
-/** The single source of truth for "can this go live?". */
 export interface PublishReadiness {
   canPublish: boolean
   blockers: PublishBlocker[]
@@ -72,6 +86,15 @@ export interface SaveListingInput {
   packSize?: number | null
   unitCode?: string | null
   isRestricted?: boolean
+  formulation?: string | null
+  composition?: ListingCompositionInput[]
+}
+
+export interface ListingCompositionInput {
+  activeIngredientCode: string
+  concentration: number
+  concentrationBasis: 'percent' | 'g_per_litre' | 'g_per_kg'
+  activeIngredientGramsPerPack: number
 }
 
 export interface StockRow {

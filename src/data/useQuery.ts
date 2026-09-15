@@ -8,14 +8,6 @@ export interface QueryResult<T> {
   refetch: () => void
 }
 
-/**
- * The hook every screen uses, which is what makes C8 (loading / empty / error /
- * data on every screen) mechanical rather than a matter of discipline.
- *
- * The cancellation flag is load-bearing: without it, switching locale or a
- * filter fast enough lets a slow earlier response overwrite a newer one, and
- * the screen shows data for a query the user has already moved on from.
- */
 export function useQuery<T>(key: unknown[], fn: () => Promise<T>): QueryResult<T> {
   const [state, setState] = useState<{ data?: T; loading: boolean; error?: ApiProblem }>({ loading: true })
   const serial = JSON.stringify(key)

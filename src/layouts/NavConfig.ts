@@ -11,15 +11,11 @@ export interface NavItem {
   to: string
   labelKey: TranslationKey
   icon: LucideIcon
-  /** When set, the link is hidden unless the role permits the action. */
+
   action?: Action
   end?: boolean
 }
 
-/**
- * C11 — Farmer Opportunities, Farmer Request Center and Promotions are absent
- * by design. Promotions is superseded by Discounts.
- */
 export const COMPANY_NAV: NavItem[] = [
   { to: '/', labelKey: 'nav.dashboard', icon: LayoutGrid, end: true },
   { to: '/market', labelKey: 'nav.market', icon: LineChart },

@@ -25,8 +25,7 @@ export function Discounts() {
 
   const discounts = useQuery(['discounts'], () => api.listDiscounts({ page: 1, pageSize: 50 }))
   const listings = useQuery(['listings', 'all'], () => api.listListings({ page: 1, pageSize: 100 }))
-  // Default to a live discount on a product it actually covers, so the panel
-  // answers "what does this discount cost me" rather than showing a zero.
+
   const active = discounts.data?.items.find((x) => x.status === 'active') ?? null
   const focusId = selected ?? active?.id ?? null
   const focus = discounts.data?.items.find((x) => x.id === focusId) ?? null
@@ -34,8 +33,7 @@ export function Discounts() {
     focus?.scope.kind === 'listing'
       ? focus.scope.listingIds[0]
       : listings.data?.items.find((l) => l.categoryId === (focus?.scope.kind === 'category' ? focus.scope.categoryId : ''))?.id
-  // No hard-coded fallback id. There was one, and against real data it asked
-  // the API to price a listing that does not exist and came back 400.
+
   const marginListing = focusListing ?? listings.data?.items[0]?.id ?? null
   const margin = useQuery(['margin', marginListing ?? '', focusId ?? ''], async () =>
     marginListing ? api.getMarginBreakdown(marginListing, focusId) : undefined)
@@ -48,9 +46,6 @@ export function Discounts() {
 
     const nameOf = (id: string) => ls.find((l) => l.id === id)?.name ?? id
 
-    // Running the detector for every discount reports each clash twice, once
-    // from each side. Key on the listing plus the unordered pair so a clash is
-    // stated once, and name the product rather than showing its id.
     const seen = new Set<string>()
     const all = ds
       .flatMap((d) => detectConflicts(d, ds, categories))
@@ -61,9 +56,7 @@ export function Discounts() {
         seen.add(key)
         return true
       })
-    // Mark the clash per product AND discount. Keying on the discount alone
-    // painted "Insecticide season 10%" as competing on every insecticide, even
-    // the ones where it is the only offer — a warning where there is no problem.
+
     const conflicted = new Set(all.flatMap((c) => c.discountIds.map((d) => `${c.listingId}|${d}`)))
 
     const listingIds = (d: Discount) =>
@@ -111,7 +104,7 @@ export function Discounts() {
         actions={<Gate action="discount.manage"><Button onClick={() => navigate('/discounts/new')}>{t('discounts.new')}</Button></Gate>}
       />
 
-      {/* Two charts, two encodings: when discounts collide, and what they cost (C5). */}
+      { }
       <ChartScreen>
         <div className="mb-6 grid gap-5 lg:grid-cols-3">
           <div className="lg:col-span-2">

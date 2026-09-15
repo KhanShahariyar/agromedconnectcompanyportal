@@ -24,8 +24,7 @@ export function ForgotPassword() {
       await api.forgotPassword(normalisePhone(identifier))
     } finally {
       setBusy(false)
-      // Always the same outcome. A message that differs for known and unknown
-      // accounts is an account-enumeration oracle.
+
       setSent(true)
     }
   }

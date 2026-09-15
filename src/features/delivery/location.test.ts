@@ -17,7 +17,7 @@ describe('googleMapsDirections', () => {
       { lat: 1, lng: 2, precision: 'exact' as const },
       { lat: null, lng: null, precision: 'none' as const },
     ]) {
-      expect(googleMapsDirections(loc, 'x')).toMatch(/^https:\/\/www\.google\.com\/maps\/dir\//)
+      expect(googleMapsDirections(loc, 'x')).toMatch(/^https:\/\/www\.google\.com\/maps\/dir\
     }
   })
 })

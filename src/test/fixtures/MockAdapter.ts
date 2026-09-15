@@ -1,22 +1,23 @@
-import type { DataAdapter } from '../DataAdapter'
-import { problem } from '../DataAdapter'
+import type { DataAdapter } from '@/data/DataAdapter'
+import { problem } from '@/data/DataAdapter'
 import type {
+  Category,
   AdvancePayload, AppNotification, Certificate, DeliveryAssignment, Discount, DiscountConflict,
   FeedbackInput, FulfilmentStep, HandoverInput, IdentityDocument, Listing, ListingStatus,
-  MarginBreakdown, MarketIntelligence, Member, OfferStatus, OrderDetail, OrderStatus,
+  InvitationIssued, MarginBreakdown, MarketIntelligence, Member, OfferStatus, OrderDetail, OrderStatus,
   OrderSummary, Organisation, Page, PageQuery, Payout, PerformanceReport, PortalRole,
   PublishBlocker, PublishReadiness, RegisterCompanyInput, Review, SaveDiscountInput,
   SaveListingInput, ServiceAvailability, Session, Solution, StockRow, SubmitCertificateInput,
   SubmitIdentityInput, Uuid, VerificationDossier,
-} from '../contracts'
-import { ORDER_STATUS_FLOW } from '../contracts'
+} from '@/data/contracts'
+import { ORDER_STATUS_FLOW } from '@/data/contracts'
 import { detectConflicts } from '@/features/discounts/conflicts'
 import * as fx from './fixtures'
 import { bdt, SEED } from './fixtures'
 
 export interface MockOptions {
   latencyMs?: number
-  /** Lets a reviewer exercise error states without editing code. */
+
   failureRate?: number
 }
 
@@ -27,11 +28,6 @@ function paginate<T>(rows: T[], q: PageQuery): Page<T> {
   return { items: rows.slice(start, start + pageSize), page, pageSize, total: rows.length }
 }
 
-/**
- * An in-memory backend, not a stub. It mutates its own fixtures, so a review
- * session behaves like the real thing: publishing a listing changes its status
- * for later reads, and advancing an order appends real history.
- */
 export class MockAdapter implements DataAdapter {
   readonly seed = SEED
   private readonly latency: number
@@ -71,7 +67,6 @@ export class MockAdapter implements DataAdapter {
     return rows.filter((r) => fields(r).some((f) => f.toLowerCase().includes(needle)))
   }
 
-  // ---------------------------------------------------------------- auth
   private session(role: PortalRole = 'owner'): Session {
     const member = this.members.find((m) => m.role === role) ?? this.members[0]!
     return {
@@ -105,12 +100,10 @@ export class MockAdapter implements DataAdapter {
   acceptInvitation(_token: string, _password: string) { return this.settle(this.session('manager')) }
   logout() { return this.settle(undefined as void) }
 
-  // -------------------------------------------------- organisation & verification
   getOrganisation() { return this.settle(this.organisation) }
 
   updateOrganisation(patch: Partial<Organisation>) {
-    // C14 — the company can never assign its own delivery mode. Rejecting here
-    // rather than ignoring the field means a UI regression fails loudly.
+
     if ('deliveryMode' in patch) {
       return Promise.reject(problem(
         'delivery_mode_not_self_assignable',
@@ -148,6 +141,11 @@ export class MockAdapter implements DataAdapter {
     })
   }
 
+  uploadCertificateDocument(certificateId: Uuid, _file: File) {
+    const c = this.certificates.find((x) => x.id === certificateId)
+    return this.settle({ ...c!, documentUrl: `/api/v1/certificates/${certificateId}/document` })
+  }
+
   submitCertificate(input: SubmitCertificateInput): Promise<Certificate> {
     const cert: Certificate = {
       id: `crt-${Date.now()}`,
@@ -167,8 +165,7 @@ export class MockAdapter implements DataAdapter {
   }
 
   submitIdentityDocument(input: SubmitIdentityInput): Promise<IdentityDocument> {
-    // G1 — only a mask ever reaches the browser. The full number is dropped here
-    // exactly as the server will drop it from its response.
+
     const doc: IdentityDocument = {
       id: `idd-${Date.now()}`,
       kind: input.kind,
@@ -186,13 +183,59 @@ export class MockAdapter implements DataAdapter {
     return this.getVerificationDossier()
   }
 
-  // ------------------------------------------------------------ catalogue
-  listListings(q: PageQuery & { kind?: 'product' | 'service'; status?: ListingStatus }) {
+  listListings(q: PageQuery & { kind?: 'product' | 'service'; status?: ListingStatus; categoryId?: Uuid }) {
     let rows = this.listings
     if (q.kind) rows = rows.filter((l) => l.kind === q.kind)
     if (q.status) rows = rows.filter((l) => l.status === q.status)
+    if (q.categoryId) {
+      // subtree match, the way the API does it
+      const wanted = new Set<string>()
+      const collect = (id: string) => {
+        wanted.add(id)
+        for (const c of this.categories) if (c.parentId === id) collect(c.id)
+      }
+      collect(q.categoryId)
+      rows = rows.filter((l) => wanted.has(l.categoryId))
+    }
     rows = this.search(rows, q, (l) => [l.name, l.sku, l.brand ?? ''])
     return this.settle(paginate(rows, q))
+  }
+
+  /** A miniature three-level tree, enough to drive the cascading selects. */
+  private readonly categories: Category[] = [
+    { id: 'cat-animal', code: 'animal-division', name: 'Animal Division', parentId: null, depth: 0, listingKind: 'product', displayOrder: 1 },
+    { id: 'cat-fish', code: 'fish-division', name: 'Fish Division', parentId: null, depth: 0, listingKind: 'product', displayOrder: 2 },
+    // A division with no children: services attach straight to it.
+    { id: 'cat-services', code: 'services-division', name: 'Services', parentId: null, depth: 0, listingKind: 'service', displayOrder: 3 },
+    { id: 'cat-cow', code: 'cattle', name: 'Cow', parentId: 'cat-animal', depth: 1, listingKind: 'product', displayOrder: 1 },
+    { id: 'cat-chicken', code: 'poultry', name: 'Chicken', parentId: 'cat-animal', depth: 1, listingKind: 'product', displayOrder: 2 },
+    { id: 'cat-cow-vitmin', code: 'cattle-vitamins-minerals', name: 'Vitamins & Minerals', parentId: 'cat-cow', depth: 2, listingKind: 'product', displayOrder: 1 },
+    { id: 'cat-cow-deworm', code: 'cattle-deworming-products', name: 'Deworming Products', parentId: 'cat-cow', depth: 2, listingKind: 'product', displayOrder: 2 },
+    { id: 'cat-chicken-resp', code: 'poultry-respiratory-health', name: 'Respiratory Health', parentId: 'cat-chicken', depth: 2, listingKind: 'product', displayOrder: 1 },
+  ]
+
+  listCategories(params?: { level?: number; parentId?: Uuid }) {
+    if (params?.parentId) return this.settle(this.categories.filter((c) => c.parentId === params.parentId))
+    if (params?.level != null) return this.settle(this.categories.filter((c) => c.depth === params.level! - 1))
+    return this.settle(this.categories.filter((c) => c.parentId === null))
+  }
+
+  getCategoryBreadcrumb(id: Uuid) {
+    const chain: Category[] = []
+    let cursor = this.categories.find((c) => c.id === id)
+    while (cursor) {
+      chain.unshift(cursor)
+      cursor = cursor.parentId ? this.categories.find((c) => c.id === cursor!.parentId) : undefined
+    }
+    return this.settle(chain)
+  }
+
+  uploadListingImage(listingId: Uuid, _file: File) {
+    return this.getListing(listingId)
+  }
+
+  deleteListingImage(listingId: Uuid, _mediaId: Uuid) {
+    return this.getListing(listingId)
   }
 
   getListing(id: Uuid) {
@@ -257,7 +300,7 @@ export class MockAdapter implements DataAdapter {
   }
 
   deleteListing(id: Uuid) {
-    // Soft delete — order history must keep resolving its snapshots.
+
     this.listings = this.listings.map((l) => (l.id === id ? { ...l, status: 'withdrawn' as const } : l))
     return this.settle(undefined as void)
   }
@@ -272,7 +315,6 @@ export class MockAdapter implements DataAdapter {
 
   saveServiceAvailability(_id: Uuid, slots: ServiceAvailability[]) { return this.settle(slots) }
 
-  // ------------------------------------------------------------ inventory
   listStock(q: PageQuery) {
     const rows = this.search(this.stock, q, (s) => [s.name, s.sku])
       .slice()
@@ -287,7 +329,6 @@ export class MockAdapter implements DataAdapter {
     return this.settle(next.find((s) => s.listingId === listingId)!)
   }
 
-  // --------------------------------------------------------------- orders
   private decorate(o: OrderDetail): OrderDetail {
     const mode = this.organisation.deliveryMode
     const path = o.deliveryType === 'pickup' ? 'own' : o.deliveryType
@@ -295,10 +336,8 @@ export class MockAdapter implements DataAdapter {
     const idx = o.currentStep ? flow.indexOf(o.currentStep) : -1
     const next = idx >= 0 && idx < flow.length - 1 ? flow[idx + 1]! : null
 
-    // The final step of the partner path belongs to the platform, not the
-    // company — so it is never offered here.
     const companyMayAdvance = next !== null && !(path === 'partner' && next === 'delivered')
-    // C14 — a path the assigned mode forbids yields no transitions at all.
+
     const modeAllows = mode === 'both' || mode === path
     return { ...o, availableTransitions: companyMayAdvance && modeAllows ? [next] : [] }
   }
@@ -368,7 +407,6 @@ export class MockAdapter implements DataAdapter {
     return this.settle(this.decorate(next))
   }
 
-  // ------------------------------------------------------------ discounts
   listDiscounts(q: PageQuery & { status?: OfferStatus }) {
     let rows = this.discounts
     if (q.status) rows = rows.filter((d) => d.status === q.status)
@@ -446,11 +484,9 @@ export class MockAdapter implements DataAdapter {
     })
   }
 
-  // -------------------------------------------------- market intelligence
   getMarketIntelligence(window: '3m' | '6m' | '12m'): Promise<MarketIntelligence> {
     const months = window === '3m' ? 3 : window === '6m' ? 6 : 12
-    // Everything on this marketplace is an agricultural medicine, so the useful
-    // cut is medicine type, not "category" — which would be a single constant.
+
     const categories = ['Insecticide', 'Fungicide', 'Herbicide', 'Bio-pesticide', 'Veterinary']
     const demandTrend: MarketIntelligence['demandTrend'] = []
     for (let m = months - 1; m >= 0; m--) {
@@ -489,7 +525,7 @@ export class MockAdapter implements DataAdapter {
         districtName, lat, lng,
         orderCount: [412, 268, 233, 197, 164, 121, 143, 38][i]!,
         competitorCount,
-        // R4 — below the k-anonymity floor an aggregate stops being anonymous.
+
         isDisclosable: competitorCount >= 3,
       }
     })
@@ -505,13 +541,17 @@ export class MockAdapter implements DataAdapter {
     })
   }
 
-  // ----------------------------------------------------------------- team
   listMembers(q: PageQuery) {
     const rows = this.search(this.members, q, (m) => [m.user.fullName, m.user.phoneE164 ?? ''])
     return this.settle(paginate(rows, q))
   }
 
-  inviteMember(_email: string, _role: PortalRole) { return this.settle(undefined as void) }
+  inviteMember(_identifier: string, _role: PortalRole) {
+    return this.settle<InvitationIssued>({
+      id: 'inv-0001', token: 'test-invitation-token',
+      expiresAt: new Date(Date.now() + 14 * 864e5).toISOString(),
+    })
+  }
 
   setMemberRole(membershipId: Uuid, role: PortalRole) {
     const admins = this.members.filter((m) => m.role === 'owner' && m.status === 'active')
@@ -543,7 +583,6 @@ export class MockAdapter implements DataAdapter {
     return this.settle(undefined as void)
   }
 
-  // ------------------------------------- reports, reviews, payments, misc
   getPerformanceReport(window: '3m' | '6m' | '12m'): Promise<PerformanceReport> {
     const months = window === '3m' ? 3 : window === '6m' ? 6 : 12
     const categories = ['Insecticide', 'Fungicide', 'Herbicide', 'Bio-pesticide', 'Veterinary']
@@ -605,9 +644,20 @@ export class MockAdapter implements DataAdapter {
     return this.settle(paginate(this.notifications, q))
   }
 
+  registerDeviceToken(_token: string, _platform: 'web'): Promise<void> {
+    return this.settle(undefined as void)
+  }
+
+  removeDeviceToken(_token: string, _platform: 'web'): Promise<void> {
+    return this.settle(undefined as void)
+  }
+
+  async markNotificationsRead(id?: Uuid): Promise<void> {
+    this.notifications = id ? this.notifications.filter(n => n.id !== id) : []
+  }
+
   listSolutions(): Promise<Solution[]> { return this.settle(this.solutions) }
 
-  // ------------------------------------------------------------- delivery
   listMyAssignments(status: 'active' | 'completed' = 'active') {
     const rows = this.assignments.filter((a) =>
       status === 'active' ? a.status !== 'delivered' && a.status !== 'failed' : a.status === 'delivered')

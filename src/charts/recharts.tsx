@@ -33,8 +33,6 @@ function TooltipCard({ active, payload, label, format }: {
   )
 }
 
-/* ------------------------------------------------------------- LineTrend */
-
 export function LineTrend({ data, xKey, yKey, name, height = 220, valueFormat }: {
   data: Record<string, string | number>[]
   xKey: string
@@ -53,7 +51,7 @@ export function LineTrend({ data, xKey, yKey, name, height = 220, valueFormat }:
           <XAxis dataKey={xKey} tick={AXIS} tickLine={false} axisLine={{ stroke: TOKENS.border }} />
           <YAxis tick={AXIS} tickLine={false} axisLine={false} tickFormatter={f.tick} />
           <Tooltip content={<TooltipCard format={fmt} />} />
-          {/* A single series needs no legend — the chart title names it. */}
+          { }
           <Line isAnimationActive={false} type="monotone" dataKey={yKey} name={name} stroke={seriesColour(0)} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
@@ -61,8 +59,6 @@ export function LineTrend({ data, xKey, yKey, name, height = 220, valueFormat }:
     </>
   )
 }
-
-/* ----------------------------------------------------------- StackedArea */
 
 export function StackedArea({ data, xKey, seriesKeys, height = 260, asPercent }: {
   data: Record<string, string | number>[]
@@ -86,7 +82,7 @@ export function StackedArea({ data, xKey, seriesKeys, height = 260, asPercent }:
             <Area
               key={k} isAnimationActive={false} type="monotone" dataKey={k} name={k} stackId="1"
               stroke={seriesColour(i)} fill={seriesColour(i)} fillOpacity={0.85}
-              // A 2px surface gap keeps stacked bands legible where two hues meet.
+
               strokeWidth={2} strokeLinejoin="round"
             />
           ))}
@@ -100,8 +96,6 @@ export function StackedArea({ data, xKey, seriesKeys, height = 260, asPercent }:
     </>
   )
 }
-
-/* ----------------------------------------------------------- GroupedBar */
 
 export function GroupedBar({ data, xKey, seriesKeys, height = 260, valueFormat }: {
   data: Record<string, string | number>[]
@@ -135,8 +129,6 @@ export function GroupedBar({ data, xKey, seriesKeys, height = 260, valueFormat }
   )
 }
 
-/* -------------------------------------------------------------- Scatter */
-
 export function PriceScatter({ points, height = 300, xFormat }: {
   points: { x: number; y: number; label: string; isMine: boolean }[]
   height?: number
@@ -156,8 +148,8 @@ export function PriceScatter({ points, height = 300, xFormat }: {
           <ZAxis range={[70, 70]} />
           <Tooltip content={<TooltipCard format={f.tick} />} cursor={{ strokeDasharray: '3 3' }} />
           <Legend wrapperStyle={{ fontSize: 11, color: TOKENS.inkSoft }} />
-          {/* The market cloud is recessive; my listings carry the ring so they
-              are findable without relying on hue alone. */}
+          {
+}
           <Scatter isAnimationActive={false} name="Market" data={market} fill={SERIES_OTHER} fillOpacity={0.55} />
           <Scatter isAnimationActive={false} name="My listings" data={mine} fill={seriesColour(0)} stroke={TOKENS.panel} strokeWidth={2} />
         </ScatterChart>
@@ -170,8 +162,6 @@ export function PriceScatter({ points, height = 300, xFormat }: {
     </>
   )
 }
-
-/* ---------------------------------------------------------------- Donut */
 
 export function Donut({ slices, height = 220, footnote }: {
   slices: { label: string; value: number }[]
@@ -191,7 +181,7 @@ export function Donut({ slices, height = 220, footnote }: {
           <Legend wrapperStyle={{ fontSize: 11, color: TOKENS.inkSoft }} />
         </PieChart>
       </ResponsiveContainer>
-      {/* Counts as well as shares — a percentage alone hides a tiny sample. */}
+      { }
       <ul className="mt-2 space-y-1 text-xs text-ink-soft">
         {slices.map((s, i) => (
           <li key={`${s.label}-${i}`} className="flex items-center gap-2">

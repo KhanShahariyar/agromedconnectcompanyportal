@@ -1,9 +1,5 @@
 import type { Uuid, IsoDateTime, VerificationStatus, DeliveryMode } from './common'
 
-/**
- * The three portal roles map onto seeded database roles: Admin -> `owner`,
- * Employee -> `manager`, Delivery Man -> `delivery_man` (new, gap G3).
- */
 export const PORTAL_ROLES = ['owner', 'manager', 'delivery_man'] as const
 export type PortalRole = (typeof PORTAL_ROLES)[number]
 
@@ -20,7 +16,7 @@ export interface Organisation {
   tinNumber: string | null
   verificationStatus: VerificationStatus
   verifiedAt: IsoDateTime | null
-  /** C14 — read-only to the company. Rendered as text, never as a control. */
+
   deliveryMode: DeliveryMode
   deliveryModeAssignedAt: IsoDateTime | null
   isBlacklisted: boolean
@@ -46,7 +42,7 @@ export interface Member {
   role: PortalRole
   status: 'active' | 'suspended' | 'removed'
   joinedAt: IsoDateTime
-  /** iam.membership_permission — per-member overrides on top of the role. */
+
   overrides: { permission: string; effect: 'grant' | 'deny' }[]
 }
 
@@ -67,4 +63,10 @@ export interface RegisterCompanyInput {
   contactPhone: string
   adminFullName: string
   password: string
+}
+
+export interface InvitationIssued {
+  id: Uuid
+  token: string
+  expiresAt: IsoDateTime
 }

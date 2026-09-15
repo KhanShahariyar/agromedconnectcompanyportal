@@ -41,8 +41,7 @@ function readStoredLocale(): Locale | null {
     const v = localStorage.getItem(STORAGE_KEY)
     return v === 'bn-BD' || v === 'en-US' ? v : null
   } catch {
-    // Private browsing and blocked site data both throw here. A portal that
-    // cannot read a preference should still render, in the default language.
+
     return null
   }
 }
@@ -55,12 +54,12 @@ export function LocaleProvider({ children, initial }: { children: ReactNode; ini
     try {
       localStorage.setItem(STORAGE_KEY, l)
     } catch {
-      /* preference simply does not persist */
+      return
     }
   }, [])
 
   useEffect(() => {
-    // Drives the :lang(bn) rule in tokens.css that swaps in Noto Sans Bengali.
+
     document.documentElement.lang = locale === 'bn-BD' ? 'bn' : 'en'
   }, [locale])
 
@@ -111,7 +110,6 @@ export function useT(): Translate {
   return useLocaleContext().t
 }
 
-/** Screens use this, never the raw formatters — which is what makes C6 reviewable. */
 export function useFormat(): FormatBundle {
   return useLocaleContext().format
 }

@@ -3,15 +3,6 @@ import 'leaflet/dist/leaflet.css'
 import { useT } from '@/i18n/LocaleProvider'
 import type { GeoPoint } from '@/data/contracts'
 
-/**
- * Directions always open Google Maps, whoever is looking — the courier, the
- * company, or support. It is what people on this market actually navigate with,
- * and it works from a coordinate or from a written address, so the link is
- * useful even for the orders that have no pin yet.
- *
- * The map tiles stay OpenStreetMap: they need no API key, and embedding Google's
- * map would. Displaying OSM and navigating with Google is a deliberate split.
- */
 export function googleMapsDirections(location: GeoPoint, address: string): string {
   const destination = location.precision === 'exact' && location.lat !== null && location.lng !== null
     ? `${location.lat},${location.lng}`
@@ -43,8 +34,7 @@ export function DeliveryLocation({ location, address, geographyName, phone, heig
           </MapContainer>
         </div>
       ) : (
-        /* No pin was captured. Saying so beats centring a map on a district and
-           letting someone drive to the middle of it. */
+
         <div data-testid="no-map-notice" className="rounded-card border border-line bg-sunken p-4 text-sm text-ink-soft">
           {t('delivery.noMap')}
         </div>

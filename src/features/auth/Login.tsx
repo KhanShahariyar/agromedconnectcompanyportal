@@ -50,8 +50,8 @@ export function Login() {
                  value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
 
-        {/* The API's problem detail is shown verbatim — a generic "login failed"
-            hides the difference between a wrong password and a locked account. */}
+        {
+}
         {failure && (
           <p role="alert" className="text-sm text-danger">{failure.detail ?? failure.title}</p>
         )}

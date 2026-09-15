@@ -1,10 +1,4 @@
-/**
- * WCAG 2.1 relative luminance and contrast ratio.
- *
- * These exist so the palette's rules can be asserted in a test rather than
- * trusted. Spec 6.2 records two findings this guards: `secondary` and
- * `accent` are fill-only because they fail AA as text on the cream base.
- */
+
 
 function srgbToLinear(channel: number): number {
   const s = channel / 255

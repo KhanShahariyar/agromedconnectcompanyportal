@@ -7,6 +7,7 @@ import { AsyncBoundary, Badge, Button, PageHeader, Pagination, SearchInput, Tabl
 import type { Column } from '@/ui'
 import { Gate } from '@/access/Gate'
 import type { Listing, ListingStatus } from '@/data/contracts'
+import { CategoryDrilldown } from './CategoryDrilldown'
 
 const STATUS_TONE: Record<ListingStatus, 'success' | 'warning' | 'neutral'> = {
   active: 'success',
@@ -23,9 +24,12 @@ export function ListingList({ kind }: { kind: 'product' | 'service' }) {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  // Any tier: the API matches the subtree beneath whatever is chosen, so this
+  // one value covers "all of Animal" and "just Cattle Medicine" alike.
+  const [categoryId, setCategoryId] = useState<Uuid | null>(null)
 
-  const q = useQuery(['listings', kind, search, page], () =>
-    api.listListings({ kind, search, page, pageSize: 10 }))
+  const q = useQuery(['listings', kind, search, page, categoryId ?? ''], () =>
+    api.listListings({ kind, search, page, pageSize: 10, categoryId: categoryId ?? undefined }))
 
   const columns: Column<Listing>[] = [
     { key: 'name', header: t('col.name'), render: (l) => (
@@ -56,9 +60,13 @@ export function ListingList({ kind }: { kind: 'product' | 'service' }) {
         }
       />
 
-      {/* Search belongs here — a list you scroll to find one row (C11). */}
-      <div className="mb-4">
+      <div className="mb-4 space-y-3">
         <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(1) }} />
+        <CategoryDrilldown
+          kind={kind}
+          value={categoryId}
+          onChange={(id) => { setCategoryId(id); setPage(1) }}
+        />
       </div>
 
       <AsyncBoundary query={q}>

@@ -2,15 +2,10 @@ import { Navigate, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useSession, RETURN_TO_KEY } from './SessionProvider'
 
-/** Sends an unauthenticated visitor to sign-in, remembering where they meant to go. */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { session, restoring } = useSession()
   const location = useLocation()
 
-  // On first paint the answer is genuinely unknown -- the refresh cookie is
-  // still being redeemed. Redirecting now would bounce a signed-in user to the
-  // sign-in screen for a moment on every single load, which reads as a bug and
-  // loses the route they asked for.
   if (restoring) {
     return (
       <div className="grid min-h-screen place-items-center text-sm text-ink-faint" role="status">
@@ -23,16 +18,12 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (!session) {
     try {
       sessionStorage.setItem(RETURN_TO_KEY, location.pathname + location.search)
-    } catch { /* the redirect still works, it just lands on the dashboard */ }
+    } catch { void 0 }
     return <Navigate to="/login" replace />
   }
   return <>{children}</>
 }
 
-/**
- * Keeps a delivery_man out of company routes even by direct URL. This is a
- * usability guard, not a security boundary — the server's RLS is that.
- */
 export function RequireCompanyRole({ children }: { children: ReactNode }) {
   const { session } = useSession()
   if (session?.role === 'delivery_man') {

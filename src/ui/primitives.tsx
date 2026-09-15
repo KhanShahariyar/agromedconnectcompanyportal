@@ -1,8 +1,6 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
 import { useT } from '@/i18n/LocaleProvider'
 
-/* ------------------------------------------------------------------ Card */
-
 export function Card({ children, className = '', ...rest }: { children: ReactNode; className?: string }) {
   return (
     <div className={`bg-panel border border-line rounded-card shadow-card ${className}`} {...rest}>
@@ -33,8 +31,6 @@ export function SectionLabel({ children }: { children: ReactNode }) {
   return <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-ink-faint">{children}</div>
 }
 
-/* ---------------------------------------------------------------- Button */
-
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'sm' | 'md'
@@ -43,8 +39,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const BUTTON_SIZES = { sm: 'text-xs px-3 py-1.5', md: 'text-sm px-4 py-2' }
 const BUTTON_VARIANTS = {
-  // Never place <Logo/> inside a primary button — the mark's mid-green fights
-  // #004B23 (C13).
+
   primary: 'bg-primary text-panel border border-primary hover:bg-primary-hover',
   secondary: 'bg-panel text-ink border border-line hover:border-ink-faint',
   ghost: 'bg-transparent text-ink-soft border border-transparent hover:text-ink',
@@ -64,8 +59,6 @@ export function Button({ children, variant = 'primary', size = 'md', loading, cl
   )
 }
 
-/* ----------------------------------------------------------------- Badge */
-
 const BADGE_TONES: Record<string, string> = {
   neutral: 'bg-sunken text-ink-soft border-line',
   success: 'bg-panel text-success border-success/40',
@@ -82,8 +75,6 @@ export function Badge({ tone = 'neutral', children }: { tone?: keyof typeof BADG
     </span>
   )
 }
-
-/* ----------------------------------------------------------------- Forms */
 
 export function Field({ label, error, hint, required, htmlFor, children }: {
   label: string
@@ -139,10 +130,6 @@ export function SearchInput({ value, onChange, placeholder }: {
   )
 }
 
-/* ------------------------------------------------------------- StatTile */
-
-/** The tile never formats — the caller passes an already-formatted string, so
- *  locale handling stays in one place. */
 export function StatTile({ label, value, delta, tone = 'neutral' }: {
   label: string
   value: string

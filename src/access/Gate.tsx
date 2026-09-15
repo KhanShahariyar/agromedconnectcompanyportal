@@ -24,16 +24,10 @@ export function useCan(): (action: Action) => Denial {
 export interface GateProps {
   action: Action
   children: ReactElement
-  /** `hide` is for navigation only — a link to a page you cannot use is a dead end. */
+
   mode?: 'disable' | 'hide'
 }
 
-/**
- * Wraps a write affordance. When blocked it disables the control and attaches
- * the *reason* as an accessible description — because telling someone "your
- * role does not permit this" when the truth is "you are not verified yet"
- * sends them to the wrong screen entirely.
- */
 export function Gate({ action, children, mode = 'disable' }: GateProps) {
   const t = useT()
   const decision = can(action, useAccess())

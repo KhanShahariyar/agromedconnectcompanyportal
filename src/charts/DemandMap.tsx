@@ -14,14 +14,6 @@ export interface DemandCell {
   isDisclosable: boolean
 }
 
-/**
- * Demand intensity by district. OpenStreetMap tiles, not Google — no API key
- * and no billing account required.
- *
- * Cells below the k-anonymity floor are drawn grey and labelled rather than
- * removed: a hole in the map reads as "no demand", which is a different and
- * wrong claim. Competitor presence is only ever a count.
- */
 export function DemandMap({ cells, height = 340 }: { cells: DemandCell[]; height?: number }) {
   const f = useFormat()
   const max = Math.max(...cells.map((c) => c.orderCount), 1)

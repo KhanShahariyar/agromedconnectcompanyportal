@@ -44,13 +44,6 @@ function isEmpty(data: unknown): boolean {
   return false
 }
 
-/**
- * Renders the four states of a query so no screen has to remember to.
- *
- * Loading only wins when there is nothing to show yet: once data has arrived, a
- * refetch keeps the old rows on screen instead of flashing a skeleton, which is
- * what makes filtering and pagination feel stable rather than jumpy.
- */
 export function AsyncBoundary<T>({ query, empty, children }: {
   query: QueryResult<T>
   empty?: ReactNode

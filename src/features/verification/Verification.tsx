@@ -4,6 +4,7 @@ import { useQuery } from '@/data/useQuery'
 import { useFormat, useT } from '@/i18n/LocaleProvider'
 import { AsyncBoundary, Badge, Button, Card, PageHeader, SectionLabel } from '@/ui'
 import type { TranslationKey } from '@/i18n/dictionary'
+import { CertificateDocument } from './CertificateDocument'
 
 const DOC_LABEL: Record<string, TranslationKey> = {
   trade_licence: 'verify.doc.trade_licence',
@@ -82,7 +83,12 @@ export function Verification() {
                         <Badge tone={c.status === 'verified' ? 'success' : c.status === 'rejected' ? 'danger' : 'warning'}>
                           {c.status}
                         </Badge>
-                        {c.expiresOn && <span className="ml-auto text-xs text-ink-faint">{f.date(c.expiresOn, 'short')}</span>}
+                        {c.expiresOn && <span className="text-xs text-ink-faint">{f.date(c.expiresOn, 'short')}</span>}
+                        <CertificateDocument
+                          certificateId={c.id}
+                          documentUrl={c.documentUrl}
+                          onUploaded={() => q.reload?.()}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -99,7 +105,7 @@ export function Verification() {
                     {d.identityDocuments.map((doc) => (
                       <li key={doc.id} data-testid={doc.kind} className="flex items-center gap-3 py-3 text-sm">
                         <span className="text-ink">{t(DOC_LABEL[doc.kind] ?? 'verify.doc.nid')}</span>
-                        {/* G1 — only the mask ever reaches the browser. */}
+                        { }
                         <span className="font-mono text-ink-soft">{doc.maskedNumber}</span>
                         <Badge tone={doc.status === 'verified' ? 'success' : 'warning'}>{doc.status}</Badge>
                       </li>

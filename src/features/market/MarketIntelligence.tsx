@@ -44,8 +44,8 @@ export function MarketIntelligence() {
 
           return (
             <>
-              {/* Stated because these figures come from a cached, scheduled
-                  recomputation — a stale number shown as live misprices a product. */}
+              {
+}
               <p data-testid="generated-at" className="mb-4 text-xs text-ink-faint">
                 {t('market.updated', { when: f.dateTime(d.generatedAt) })}
               </p>

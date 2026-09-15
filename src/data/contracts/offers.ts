@@ -12,7 +12,7 @@ export interface Discount {
   code: string
   name: string
   basis: 'percentage' | 'fixed'
-  /** 0–100, per CK_offer_percent. Null when basis is 'fixed'. */
+
   discountPercent: number | null
   discountAmount: Money | null
   maxDiscount: Money | null
@@ -28,11 +28,6 @@ export interface Discount {
   redemptionCount: number
 }
 
-/**
- * pricing.offer permits overlapping windows on one listing, with stack_priority
- * deciding the winner. A timeline is the only encoding that makes an accidental
- * overlap visible rather than discovered in a customer complaint.
- */
 export interface DiscountConflict {
   listingId: Uuid
   listingName: string
@@ -43,7 +38,6 @@ export interface DiscountConflict {
   winningDiscountId: Uuid | null
 }
 
-/** Waterfall input: list price -> discount -> commission -> net, per unit. */
 export interface MarginBreakdown {
   listPrice: Money
   discount: Money
