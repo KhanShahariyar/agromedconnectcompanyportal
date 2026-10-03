@@ -59,8 +59,8 @@ export function ListingEditor({ kind }: { kind: 'product' | 'service' }) {
   const isNew = !id || id === 'new'
   const base = kind === 'product' ? '/products' : '/services'
 
-  const existing = useQuery(['listing', id ?? 'new'], async () =>
-    isNew ? undefined : api.getListing(id!))
+  const existing = useQuery(['listing', id ?? 'new'], async (signal) =>
+    isNew ? undefined : api.withSignal(signal).getListing(id!))
 
   const [draft, setDraft] = useState<Draft | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})

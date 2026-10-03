@@ -16,8 +16,8 @@ export function ListingDetail({ kind }: { kind: 'product' | 'service' }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [nonce, setNonce] = useState(0)
 
-  const listing = useQuery(['listing', id, nonce], () => api.getListing(id))
-  const readiness = useQuery(['readiness', id, nonce], () => api.getPublishReadiness(id))
+  const listing = useQuery(['listing', id, nonce], (signal) => api.withSignal(signal).getListing(id))
+  const readiness = useQuery(['readiness', id, nonce], (signal) => api.withSignal(signal).getPublishReadiness(id))
 
   return (
     <AsyncBoundary query={listing}>

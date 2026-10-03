@@ -8,7 +8,7 @@ export function Settings() {
   const t = useT()
   const api = useData()
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const q = useQuery(['organisation'], () => api.getOrganisation())
+  const q = useQuery(['organisation'], (signal) => api.withSignal(signal).getOrganisation())
 
   return (
     <div>

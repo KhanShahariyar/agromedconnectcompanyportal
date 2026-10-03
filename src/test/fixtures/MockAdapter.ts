@@ -29,6 +29,9 @@ function paginate<T>(rows: T[], q: PageQuery): Page<T> {
 }
 
 export class MockAdapter implements DataAdapter {
+  // In-memory; there is nothing in flight to cancel.
+  withSignal(): DataAdapter { return this }
+
   readonly seed = SEED
   private readonly latency: number
   private readonly failureRate: number

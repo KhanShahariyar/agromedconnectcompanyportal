@@ -14,7 +14,7 @@ export function Inventory() {
   const api = useData()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const q = useQuery(['stock', search, page], () => api.listStock({ search, page, pageSize: 10 }))
+  const q = useQuery(['stock', search, page], (signal) => api.withSignal(signal).listStock({ search, page, pageSize: 10 }))
 
   const columns: Column<StockRow>[] = [
     { key: 'name', header: t('col.name'), render: (s) => s.name },

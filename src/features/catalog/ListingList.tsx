@@ -28,8 +28,8 @@ export function ListingList({ kind }: { kind: 'product' | 'service' }) {
   // one value covers "all of Animal" and "just Cattle Medicine" alike.
   const [categoryId, setCategoryId] = useState<Uuid | null>(null)
 
-  const q = useQuery(['listings', kind, search, page, categoryId ?? ''], () =>
-    api.listListings({ kind, search, page, pageSize: 10, categoryId: categoryId ?? undefined }))
+  const q = useQuery(['listings', kind, search, page, categoryId ?? ''], (signal) =>
+    api.withSignal(signal).listListings({ kind, search, page, pageSize: 10, categoryId: categoryId ?? undefined }))
 
   const columns: Column<Listing>[] = [
     { key: 'name', header: t('col.name'), render: (l) => (

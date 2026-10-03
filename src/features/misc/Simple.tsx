@@ -18,7 +18,7 @@ export function Reviews() {
   const [page, setPage] = useState(1)
   const [nonce, setNonce] = useState(0)
   const [draft, setDraft] = useState<Record<string, string>>({})
-  const q = useQuery(['reviews', page, nonce], () => api.listReviews({ page, pageSize: 10 }))
+  const q = useQuery(['reviews', page, nonce], (signal) => api.withSignal(signal).listReviews({ page, pageSize: 10 }))
 
   return (
     <div>
@@ -78,7 +78,7 @@ export function Payments() {
   const f = useFormat()
   const api = useData()
   const [page, setPage] = useState(1)
-  const q = useQuery(['payouts', page], () => api.listPayouts({ page, pageSize: 10 }))
+  const q = useQuery(['payouts', page], (signal) => api.withSignal(signal).listPayouts({ page, pageSize: 10 }))
 
   const columns: Column<Payout>[] = [
     { key: 'ref', header: t('col.order'), render: (p) => <span className="font-mono text-xs">{p.reference}</span> },
@@ -120,7 +120,7 @@ export function Notifications() {
   const [page, setPage] = useState(1)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const q = useQuery(['notifications', page], () => api.listNotifications({ page, pageSize: 20 }))
+  const q = useQuery(['notifications', page], (signal) => api.withSignal(signal).listNotifications({ page, pageSize: 20 }))
 
   const refetch = q.refetch
   useEffect(() => onPushMessage(() => { refetch() }), [refetch])
@@ -205,7 +205,7 @@ export function SolutionCenter() {
   const t = useT()
   const f = useFormat()
   const api = useData()
-  const q = useQuery(['solutions'], () => api.listSolutions())
+  const q = useQuery(['solutions'], (signal) => api.withSignal(signal).listSolutions())
 
   return (
     <div>
@@ -234,7 +234,7 @@ export function SolutionCenter() {
 export function CompanyProfile() {
   const t = useT()
   const api = useData()
-  const q = useQuery(['organisation'], () => api.getOrganisation())
+  const q = useQuery(['organisation'], (signal) => api.withSignal(signal).getOrganisation())
   return (
     <div>
       <PageHeader title={t('profile.title')} description={t('profile.subtitle')} />

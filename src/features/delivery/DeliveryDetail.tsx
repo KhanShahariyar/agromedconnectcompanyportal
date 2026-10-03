@@ -15,7 +15,7 @@ export function DeliveryDetail() {
   const { id = '' } = useParams()
   const [confirming, setConfirming] = useState(false)
   const [receivedBy, setReceivedBy] = useState('')
-  const q = useQuery(['assignment', id], () => api.getAssignment(id))
+  const q = useQuery(['assignment', id], (signal) => api.withSignal(signal).getAssignment(id))
 
   return (
     <AsyncBoundary query={q}>

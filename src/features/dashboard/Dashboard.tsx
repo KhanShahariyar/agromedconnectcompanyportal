@@ -21,9 +21,9 @@ export function Dashboard({ userName }: { userName: string }) {
   const f = useFormat()
   const api = useData()
 
-  const report = useQuery(['report', '12m'], () => api.getPerformanceReport('12m'))
-  const orders = useQuery(['orders', 'dashboard'], () => api.listOrders({ page: 1, pageSize: 100 }))
-  const listings = useQuery(['listings', 'active'], () => api.listListings({ page: 1, pageSize: 1, status: 'active' }))
+  const report = useQuery(['report', '12m'], (signal) => api.withSignal(signal).getPerformanceReport('12m'))
+  const orders = useQuery(['orders', 'dashboard'], (signal) => api.withSignal(signal).listOrders({ page: 1, pageSize: 100 }))
+  const listings = useQuery(['listings', 'active'], (signal) => api.withSignal(signal).listListings({ page: 1, pageSize: 1, status: 'active' }))
 
   const pipeline = useMemo(() => {
     const items = orders.data?.items ?? []

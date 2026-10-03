@@ -20,7 +20,7 @@ export function OrderList() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const q = useQuery(['orders', search, page], () => api.listOrders({ search, page, pageSize: 10 }))
+  const q = useQuery(['orders', search, page], (signal) => api.withSignal(signal).listOrders({ search, page, pageSize: 10 }))
 
   const columns: Column<OrderSummary>[] = [
     { key: 'number', header: t('col.order'), render: (o) => <span className="font-mono text-xs text-ink">{o.orderNumber}</span> },

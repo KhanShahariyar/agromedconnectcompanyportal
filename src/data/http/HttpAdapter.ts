@@ -59,6 +59,18 @@ export class HttpAdapter implements DataAdapter {
 
   setAccessToken(token: string | null) { this.accessToken = token }
 
+  // A view whose every call to request() carries `signal`, so each API method is cancellable
+  // without taking a signal of its own. Methods run with the view as `this`; request() itself
+  // runs on the real instance, so the token, refresh and page cursors stay shared.
+  withSignal(signal: AbortSignal): DataAdapter {
+    return new Proxy(this, {
+      get: (target, prop, receiver) =>
+        prop === 'request'
+          ? (method: string, path: string, body?: unknown) => target.request(method, path, body, signal)
+          : Reflect.get(target, prop, receiver),
+    })
+  }
+
   setLocale(locale: string) { this.locale = locale }
 
   private static isAuthAttempt(path: string) {
@@ -108,7 +120,7 @@ export class HttpAdapter implements DataAdapter {
     }
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
       'Accept-Language': this.locale,
@@ -117,37 +129,32 @@ export class HttpAdapter implements DataAdapter {
     // A multipart body writes its own Content-Type, boundary included. Setting
     // it here produces a body the server cannot parse.
     if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
-    if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`
 
-    let response: Response
-    try {
-      response = await fetch(`${this.baseUrl}${path}`, {
-        method, headers,
-        body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
-
-        credentials: 'include',
-      })
-    } catch {
-
-      throw problem('network_unreachable', 'Could not reach the server', 0,
-        'Check your connection and try again.')
+    // Encoded once and shared by the first attempt and the post-refresh retry, so a multipart
+    // upload is resent as the same FormData rather than re-serialised as JSON ("{}").
+    const encoded = body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body)
+    const send = async () => {
+      try {
+        return await fetch(`${this.baseUrl}${path}`, {
+          method,
+          headers: this.accessToken ? { ...headers, Authorization: `Bearer ${this.accessToken}` } : headers,
+          body: encoded,
+          credentials: 'include',
+          signal,
+        })
+      } catch (cause) {
+        // A cancelled request is not an outage; rethrow the AbortError for the caller to ignore.
+        if (signal?.aborted) throw cause
+        throw problem('network_unreachable', 'Could not reach the server', 0,
+          'Check your connection and try again.')
+      }
     }
+
+    let response = await send()
 
     if (response.status === 401 && !HttpAdapter.isAuthAttempt(path)) {
 
-      if (await this.refresh()) {
-        try {
-          response = await fetch(`${this.baseUrl}${path}`, {
-            method,
-            headers: { ...headers, Authorization: `Bearer ${this.accessToken}` },
-            body: body === undefined ? undefined : JSON.stringify(body),
-            credentials: 'include',
-          })
-        } catch {
-          throw problem('network_unreachable', 'Could not reach the server', 0,
-            'Check your connection and try again.')
-        }
-      }
+      if (await this.refresh()) response = await send()
 
       if (response.status === 401) {
         this.onUnauthorised?.()

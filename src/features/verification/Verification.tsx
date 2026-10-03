@@ -18,7 +18,7 @@ export function Verification() {
   const f = useFormat()
   const api = useData()
   const [nonce, setNonce] = useState(0)
-  const q = useQuery(['dossier', nonce], () => api.getVerificationDossier())
+  const q = useQuery(['dossier', nonce], (signal) => api.withSignal(signal).getVerificationDossier())
 
   return (
     <AsyncBoundary query={q}>

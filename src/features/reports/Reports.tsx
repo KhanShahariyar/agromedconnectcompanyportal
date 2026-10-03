@@ -12,7 +12,7 @@ export function Reports() {
   const f = useFormat()
   const api = useData()
   const [win, setWin] = useState<Window>('6m')
-  const q = useQuery(['performance', win], () => api.getPerformanceReport(win))
+  const q = useQuery(['performance', win], (signal) => api.withSignal(signal).getPerformanceReport(win))
 
   return (
     <div>

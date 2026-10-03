@@ -12,7 +12,7 @@ export function MarketIntelligence() {
   const f = useFormat()
   const api = useData()
   const [win, setWin] = useState<Window>('12m')
-  const mi = useQuery(['market', win], () => api.getMarketIntelligence(win))
+  const mi = useQuery(['market', win], (signal) => api.withSignal(signal).getMarketIntelligence(win))
 
   return (
     <div>

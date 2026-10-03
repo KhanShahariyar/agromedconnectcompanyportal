@@ -8,7 +8,7 @@ export function MyDeliveries({ status = 'active' }: { status?: 'active' | 'compl
   const t = useT()
   const f = useFormat()
   const api = useData()
-  const q = useQuery(['assignments', status], () => api.listMyAssignments(status))
+  const q = useQuery(['assignments', status], (signal) => api.withSignal(signal).listMyAssignments(status))
 
   return (
     <div>

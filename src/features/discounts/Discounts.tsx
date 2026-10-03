@@ -23,8 +23,8 @@ export function Discounts() {
   const navigate = useNavigate()
   const [selected, setSelected] = useState<string | null>(null)
 
-  const discounts = useQuery(['discounts'], () => api.listDiscounts({ page: 1, pageSize: 50 }))
-  const listings = useQuery(['listings', 'all'], () => api.listListings({ page: 1, pageSize: 100 }))
+  const discounts = useQuery(['discounts'], (signal) => api.withSignal(signal).listDiscounts({ page: 1, pageSize: 50 }))
+  const listings = useQuery(['listings', 'all'], (signal) => api.withSignal(signal).listListings({ page: 1, pageSize: 100 }))
 
   const active = discounts.data?.items.find((x) => x.status === 'active') ?? null
   const focusId = selected ?? active?.id ?? null
@@ -35,8 +35,8 @@ export function Discounts() {
       : listings.data?.items.find((l) => l.categoryId === (focus?.scope.kind === 'category' ? focus.scope.categoryId : ''))?.id
 
   const marginListing = focusListing ?? listings.data?.items[0]?.id ?? null
-  const margin = useQuery(['margin', marginListing ?? '', focusId ?? ''], async () =>
-    marginListing ? api.getMarginBreakdown(marginListing, focusId) : undefined)
+  const margin = useQuery(['margin', marginListing ?? '', focusId ?? ''], async (signal) =>
+    marginListing ? api.withSignal(signal).getMarginBreakdown(marginListing, focusId) : undefined)
 
   const { rows, conflicts } = useMemo(() => {
     const ds = discounts.data?.items ?? []

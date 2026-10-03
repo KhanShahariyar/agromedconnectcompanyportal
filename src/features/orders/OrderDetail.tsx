@@ -28,7 +28,7 @@ export function OrderDetail() {
   const api = useData()
   const { id = '' } = useParams()
   const [nonce, setNonce] = useState(0)
-  const q = useQuery(['order', id, nonce], () => api.getOrder(id))
+  const q = useQuery(['order', id, nonce], (signal) => api.withSignal(signal).getOrder(id))
 
   const lineColumns: Column<OrderLine>[] = [
     { key: 'sku', header: t('col.sku'), render: (l) => <span className="font-mono text-xs text-ink-faint">{l.skuSnapshot}</span> },

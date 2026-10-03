@@ -20,7 +20,7 @@ export function Team() {
   const [role, setRole] = useState<PortalRole>('manager')
   const [sending, setSending] = useState(false)
   const [issued, setIssued] = useState<InvitationIssued | null>(null)
-  const q = useQuery(['members', search, page, nonce], () => api.listMembers({ search, page, pageSize: 10 }))
+  const q = useQuery(['members', search, page, nonce], (signal) => api.withSignal(signal).listMembers({ search, page, pageSize: 10 }))
 
   function openInvite() {
     setFailure(null)

@@ -12,6 +12,9 @@ import type {
 
 export interface DataAdapter {
 
+  /** This adapter with `signal` on every request it makes, for useQuery's cancellation. */
+  withSignal(signal: AbortSignal): DataAdapter
+
   login(identifier: string, password: string): Promise<Session>
 
   restoreSession?(): Promise<Session | null>

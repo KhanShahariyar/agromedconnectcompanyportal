@@ -51,11 +51,11 @@ export function DiscountEditor() {
   const { id } = useParams()
   const isNew = !id || id === 'new'
 
-  const listings = useQuery(['listings', 'for-discount'], () => api.listListings({ page: 1, pageSize: 100 }))
-  const allDiscounts = useQuery(['discounts', 'all'], () => api.listDiscounts({ page: 1, pageSize: 100 }))
-  const existing = useQuery(['discount', id ?? 'new'], async () => {
+  const listings = useQuery(['listings', 'for-discount'], (signal) => api.withSignal(signal).listListings({ page: 1, pageSize: 100 }))
+  const allDiscounts = useQuery(['discounts', 'all'], (signal) => api.withSignal(signal).listDiscounts({ page: 1, pageSize: 100 }))
+  const existing = useQuery(['discount', id ?? 'new'], async (signal) => {
     if (isNew) return undefined
-    const page = await api.listDiscounts({ page: 1, pageSize: 100 })
+    const page = await api.withSignal(signal).listDiscounts({ page: 1, pageSize: 100 })
     return page.items.find((d) => d.id === id)
   })
 

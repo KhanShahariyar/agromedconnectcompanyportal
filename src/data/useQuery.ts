@@ -8,7 +8,10 @@ export interface QueryResult<T> {
   refetch: () => void
 }
 
-export function useQuery<T>(key: unknown[], fn: () => Promise<T>): QueryResult<T> {
+// Ported from the buyer app's useQuery: every run gets an AbortController that is aborted when the
+// key changes or the component unmounts. fn receives its signal; a fetch that forwards it is
+// cancelled on the wire, and one that does not is still discarded, as before.
+export function useQuery<T>(key: unknown[], fn: (signal: AbortSignal) => Promise<T>): QueryResult<T> {
   const [state, setState] = useState<{ data?: T; loading: boolean; error?: ApiProblem }>({ loading: true })
   const serial = JSON.stringify(key)
   const fnRef = useRef(fn)
@@ -16,13 +19,13 @@ export function useQuery<T>(key: unknown[], fn: () => Promise<T>): QueryResult<T
   const [nonce, setNonce] = useState(0)
 
   useEffect(() => {
-    let cancelled = false
+    const controller = new AbortController()
     setState((s) => ({ ...s, loading: true, error: undefined }))
-    fnRef.current().then(
-      (data) => { if (!cancelled) setState({ data, loading: false }) },
-      (error: ApiProblem) => { if (!cancelled) setState({ loading: false, error }) },
+    fnRef.current(controller.signal).then(
+      (data) => { if (!controller.signal.aborted) setState({ data, loading: false }) },
+      (error: ApiProblem) => { if (!controller.signal.aborted) setState({ loading: false, error }) },
     )
-    return () => { cancelled = true }
+    return () => controller.abort()
   }, [serial, nonce])
 
   const refetch = useCallback(() => setNonce((n) => n + 1), [])
